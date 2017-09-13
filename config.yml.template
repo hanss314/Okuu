@@ -1,0 +1,20 @@
+# This argument is required
+token:
+  token here
+    
+prefix:
+  'cn!'
+
+cogs:
+  - cogs.host
+  - cogs.players
+  
+channel: board channel
+revealed: revealed board channel
+
+role_ids:
+  host: role can use bot
+  red_sm: red spymaster role
+  blue_sm: blue sm role
+  red: red team role
+  blue: blue team role
