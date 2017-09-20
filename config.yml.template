@@ -8,7 +8,8 @@ prefix:
 cogs:
   - cogs.host
   - cogs.players
-  
+
+# set these to the same thing if you're using one channel
 channel: board channel
 revealed: revealed board channel
 
