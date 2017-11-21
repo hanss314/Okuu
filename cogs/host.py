@@ -29,7 +29,7 @@ class Hosting():
         chan = ctx.bot.get_channel(ctx.bot.config['channel'])
         await chan.send(file=img)
         await chan.send('<@&{}> It\'s your turn to make a hint!'.format(ctx.bot.roles['red_sm']))
-        
+    """
     @commands.command()
     @checks.host()
     async def addrole(self, ctx, role, *members: discord.Member):
@@ -59,6 +59,7 @@ class Hosting():
         for member in members:
             await member.remove_roles(role, reason='Remove role for codenames.')
         await ctx.send('Roles removed!')
+        """
           
 def setup(bot):
     bot.add_cog(Hosting())
