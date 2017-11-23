@@ -2,13 +2,10 @@ import random
 
 from PIL import Image, ImageDraw, ImageFont
 
-if __name__ == '__main__': 
-    from enums import Teams, TileStates
-else: 
-    from .enums import Teams, TileStates
+from .enums import Teams, TileStates
     
     
-def get_random_words(count, not_containing=[]):
+def get_random_words(count, not_containing=list()):
     with open('words.txt', 'r') as word_file:
         words = word_file.read().split('\n')
     for word in not_containing:
@@ -17,8 +14,10 @@ def get_random_words(count, not_containing=[]):
     words = random.sample(words, count)
     return words
 
-class Board:    
-    def __init__(self, width=5, height=5, words=[]):
+
+class Board:
+
+    def __init__(self, width=5, height=5, words=list()):
         self.width = width
         self.height = height
         self.winner = None
@@ -26,11 +25,11 @@ class Board:
         self.notturn = Teams.BLUE
         self.move_count = 0
         self.max_moves = 0
-        self._board = [[None for j in range(height)] for i in range(width)]
+        self._board = [[None for i in range(height)] for j in range(width)]
         self.words = list(words) + get_random_words(max(0,width*height-len(words)), not_containing=words)
         random.shuffle(self.words)
         i = 0
-        tiles = {(x,y) for x in range(height) for y in range(width)}
+        tiles = {(x, y) for x in range(height) for y in range(width)}
         states = {}
         for ts in TileStates.__members__.values():
             if ts.count:
@@ -44,14 +43,14 @@ class Board:
         
         for x in range(len(self._board)):
             for y in range(len(self._board[x])):
-                self._board[x][y] = Tile(self.words[i], states[(x,y)])
+                self._board[x][y] = Tile(self.words[i], states[(x, y)])
                 i += 1
                 
     def get_word(self, word):
         for x in range(len(self._board)):
             for y in range(len(self._board[x])):
                 if self._board[x][y].word.lower() == word.lower():
-                    return (x,y)
+                    return (x, y)
         raise IndexError
     
     def get_winner(self):

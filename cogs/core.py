@@ -1,7 +1,10 @@
 import sys
 import discord
+import subprocess
+import asyncio
 
 from discord.ext import commands
+
 
 class Core:
 
@@ -11,7 +14,7 @@ class Core:
     @commands.group(invoke_without_command=True)
     @commands.is_owner()
     async def reload(self, ctx, *, cog=''):
-        '''Reloads an extension'''
+        """Reloads an extension"""
         try:
             ctx.bot.unload_extension(cog)
             ctx.bot.load_extension(cog)
@@ -23,7 +26,7 @@ class Core:
     @reload.group(name='all', invoke_without_command=True)
     @commands.is_owner()
     async def reload_all(self, ctx):
-        '''Reloads all extensions'''
+        """Reloads all extensions"""
         if 'cogs.util' in sys.modules:
             import importlib
             importlib.reload(sys.modules['cogs.util'])
@@ -37,21 +40,16 @@ class Core:
 
         await ctx.send('\N{OK HAND SIGN} Reloaded {} cogs successfully'.format(len(ctx.bot.extensions)))
 
-    @reload_all.group()
-    @commands.is_owner()
-    async def lolol(self, ctx):
-        pass
-
     @commands.command(aliases=['exception'])
     @commands.is_owner()
     async def error(self, ctx, *, text: str = None):
-        '''Raises an error. Testing purposes only, please don't use.'''
+        """Raises an error. Testing purposes only, please don't use."""
         raise Exception(text or 'Woo! Errors!')
 
     @commands.command()
     @commands.is_owner()
     async def setname(self, ctx, *, name):
-        '''Change the bot's username'''
+        """Change the bot's username"""
         try:
             await self.bot.user.edit(username=name)
         except discord.HTTPException:
@@ -60,7 +58,7 @@ class Core:
     @commands.command()
     @commands.is_owner()
     async def setnick(self, ctx, *, name):
-        '''Change the bot's nickname'''
+        """Change the bot's nickname"""
         try:
             await ctx.guild.get_member(self.bot.user.id).edit(nick=name)
         except discord.HTTPException:
@@ -69,7 +67,7 @@ class Core:
     @commands.command()
     @commands.is_owner()
     async def setavatar(self, ctx):
-        '''Change the bot's profile picture'''
+        """Change the bot's profile picture"""
         attachment = ctx.message.attachments[0]
         await attachment.save(attachment.filename)
         try:
@@ -87,6 +85,78 @@ class Core:
         ctx.bot.dying = True
         await ctx.send(':wave:')
         await ctx.bot.logout()
+
+    @commands.command(aliases=['git_pull'])
+    async def update(self, ctx):
+        """Updates the bot from git"""
+
+        await ctx.send(':warning: Warning! Pulling from git!')
+
+        if sys.platform == 'win32':
+            process = subprocess.run('git pull', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = process.stdout, process.stderr
+        else:
+            process = await asyncio.create_subprocess_exec('git', 'pull', stdout=subprocess.PIPE,
+                                                           stderr=subprocess.PIPE)
+            stdout, stderr = await process.communicate()
+        stdout = stdout.decode().splitlines()
+        stdout = '\n'.join('+ ' + i for i in stdout)
+        stderr = stderr.decode().splitlines()
+        stderr = '\n'.join('- ' + i for i in stderr)
+
+        await ctx.send('`Git` response: ```diff\n{}\n{}```'.format(stdout, stderr))
+
+    @commands.command()
+    async def revert(self, ctx, commit):
+        """Revert local copy to specified commit"""
+
+        await ctx.send(':warning: Warning! Reverting!')
+
+        if sys.platform == 'win32':
+            process = subprocess.run('git reset --hard {}'.format(commit), shell=True, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+            stdout, stderr = process.stdout, process.stderr
+        else:
+            process = await asyncio.create_subprocess_exec('git', 'reset', '--hard', commit, stdout=subprocess.PIPE,
+                                                           stderr=subprocess.PIPE)
+            stdout, stderr = await process.communicate()
+        stdout = stdout.decode().splitlines()
+        stdout = '\n'.join('+ ' + i for i in stdout)
+        stderr = stderr.decode().splitlines()
+        stderr = '\n'.join('- ' + i for i in stderr)
+
+        await ctx.send('`Git` response: ```diff\n{}\n{}```'.format(stdout, stderr))
+
+    @commands.command(aliases=['gitlog'])
+    async def git_log(self, ctx, commits: int = 20):
+        """Shows the latest commits. Defaults to 20 commits."""
+
+        if sys.platform == 'win32':
+            process = subprocess.run('git log --pretty=oneline --abbrev-commit', shell=True,
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = process.stdout, process.stderr
+        else:
+            process = await asyncio.create_subprocess_exec('git', 'log', '--pretty=oneline', '--abbrev-commit',
+                                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = await process.communicate()
+        stdout = stdout.decode().splitlines()
+        stdout = '\n'.join('+ ' + i[:90] for i in stdout[:commits])
+        stderr = stderr.decode().splitlines()
+        stderr = '\n'.join('- ' + i for i in stderr)
+
+        if commits > 10:
+            try:
+                await ctx.author.send('`Git` response: ```diff\n{}\n{}```'.format(stdout, stderr))
+            except discord.errors.HTTPException:
+                import os
+                with open('gitlog.txt', 'w') as log_file:
+                    log_file.write('{}\n{}'.format(stdout, stderr))
+                with open('gitlog.txt', 'r') as log_file:
+                    await ctx.author.send(file=discord.File(log_file))
+                os.remove('gitlog.txt')
+        else:
+            await ctx.send('`Git` response: ```diff\n{}\n{}```'.format(stdout, stderr))
+
 
 def setup(bot):
     bot.add_cog(Core(bot))
