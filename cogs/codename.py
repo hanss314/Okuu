@@ -75,7 +75,7 @@ class Codenames:
         mention = ctx.bot.roles['red_sm'] if ctx.bot.board.turn == Teams.RED else ctx.bot.roles['blue_sm']
         await chan.send('<@&{}> It\'s your turn to make a hint!'.format(mention))
 
-    @commands.command
+    @commands.command()
     @checks.player()
     async def get_hint(self, ctx):
         try: await ctx.send(ctx.bot.board.hint_word)
