@@ -117,7 +117,7 @@ class Misc:
                 d += '\n'
             else:
                 if args[0] not in ctx.bot.all_commands:
-                    d = 'Command not found.'
+                    d = 'Unyu?'
                 else:
                     cmd = ctx.bot.all_commands[args[0]]
                     d = self.get_help(ctx, cmd)
@@ -135,9 +135,9 @@ class Misc:
                     cmd_name += cmd.name + ' '
                 else:
                     if cmd == ctx.bot:
-                        d += 'Command not found.'
+                        d += 'Unyu?'
                     else:
-                        d += 'No sub-command found.'.format(cmd.name, i)
+                        d += 'Unyu?'
                     break
 
             else:
