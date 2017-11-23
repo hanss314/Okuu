@@ -9,13 +9,19 @@ class TTT:
 
     @commands.group(invoke_without_command=True)
     async def uttt(self, ctx):
+        '''Play a game of ultimate tic tac toe'''
         m = 'Subcommands:\n'
         for command in ctx.command.commands:
-            m += f'`{command.name}-{command.brief}\n`'
+            m += f'`{command.name}`-{command.brief}\n'
         await ctx.send(m)
 
     @uttt.command(name='play')
     async def uttt_play(self, ctx, x: int, y: int):
+        '''
+        Use this command to start a game and to play a game.
+        To start a game, the x and y coordinates are the sub-board of your first move
+        Use this command to specify the sub-board when needed and make a move when sub-board is specified
+        '''
         game = None
         boards = self.bot.uttt_boards
         for k in boards.keys():
