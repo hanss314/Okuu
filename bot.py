@@ -30,15 +30,6 @@ class CodeNamesBot(commands.Bot):
             **kwargs
         )
 
-    async def send_message(self, to, msg):
-        try:
-            if len(msg) > 2000:
-                await to.send('Whoops! Discord won\'t let me send messages over 2000 characters.\nThe message started with: ```\n{}```'.format(msg[:1000].replace('`', '`\u200b')))
-            else:
-                await to.send(msg)
-            pass
-        except discord.errors.Forbidden:
-            pass
 
     async def on_message(self, message):
         await self.process_commands(message)
@@ -65,16 +56,16 @@ class CodeNamesBot(commands.Bot):
             return
         
         if isinstance(exception, commands.CheckFailure):
-            await ctx.send('You can\'t do that.')
+            await ctx.send('Unyu?')
         elif isinstance(exception, commands.CommandNotFound):
             pass
         elif isinstance(exception, commands.UserInputError):
             error = ' '.join(exception.args)
             error_data = re.findall('Converting to \"(.*)\" failed for parameter \"(.*)\"\.', error)
             if not error_data:
-                await ctx.send('Error: {}'.format(' '.join(exception.args)))
+                await ctx.send('Foreign substance detected!: {}'.format(' '.join(exception.args)))
             else:
-                await ctx.send('Got to say, I *was* expecting `{1}` to be an `{0}`..'.format(*error_data[0]))
+                await ctx.send('Unyu? I thought `{1}` was supposed to be a `{0}`...'.format(*error_data[0]))
         else:
             info = traceback.format_exception(type(exception), exception, exception.__traceback__, chain=False)
             self.logger.error('Unhandled command exception - {}'.format(''.join(info)))

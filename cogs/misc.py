@@ -54,9 +54,9 @@ class Misc:
 
     @commands.command()
     @commands.guild_only()
-    async def me(self, ctx):
+    async def me(self, ctx, member: discord.Member=None):
         """Get info about yourself."""
-        member = ctx.author
+        if not member: member = ctx.author
         now = datetime.datetime.utcnow()
         joined_days = now - member.joined_at
         created_days = now - member.created_at

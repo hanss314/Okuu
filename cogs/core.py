@@ -11,6 +11,10 @@ class Core:
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command()
+    async def say(self, ctx, channel: discord.TextChannel, *, text: str):
+        await channel.send(text)
+
     @commands.group(invoke_without_command=True)
     @commands.is_owner()
     async def reload(self, ctx, *, cog=''):
@@ -19,9 +23,9 @@ class Core:
             ctx.bot.unload_extension(cog)
             ctx.bot.load_extension(cog)
         except Exception as e:
-            await ctx.send('Failed to load: `{}`\n```py\n{}\n```'.format(cog, e))
+            await ctx.send('<:okuuSad:383088578684649500> Failed to load: `{}`\n```py\n{}\n```'.format(cog, e))
         else:
-            await ctx.send('\N{OK HAND SIGN} Reloaded cog {} successfully'.format(cog))
+            await ctx.send('<:okuuHappy:383086039100686336> Reloaded cog {} successfully'.format(cog))
 
     @reload.group(name='all', invoke_without_command=True)
     @commands.is_owner()
@@ -36,15 +40,16 @@ class Core:
             try:
                 ctx.bot.load_extension(extension)
             except Exception as e:
-                await ctx.send('Failed to load `{}`:\n```py\n{}\n```'.format(extension, e))
+                await ctx.send('<:okuuSad:383088578684649500> Failed to load `{}`:\n```py\n{}\n```'.format(extension, e))
 
-        await ctx.send('\N{OK HAND SIGN} Reloaded {} cogs successfully'.format(len(ctx.bot.extensions)))
+        await ctx.send('<:okuuHappy:383086039100686336> Reloaded {} cogs successfully'.format(len(ctx.bot.extensions)))
 
     @commands.command(aliases=['exception'])
     @commands.is_owner()
     async def error(self, ctx, *, text: str = None):
         """Raises an error. Testing purposes only, please don't use."""
-        raise Exception(text or 'Woo! Errors!')
+        await ctx.send('Foreign substance detected! Uhh... what do I do again? Oh well, I\'ll just kill it!')
+        raise Exception(text or 'Pichuun~')
 
     @commands.command()
     @commands.is_owner()
@@ -52,8 +57,8 @@ class Core:
         """Change the bot's username"""
         try:
             await self.bot.user.edit(username=name)
-        except discord.HTTPException:
-            await ctx.send('Changing the name failed.')
+        except (discord.HTTPException, discord.Forbidden):
+            await ctx.send('Unyu? What\'s my name again?')
 
     @commands.command()
     @commands.is_owner()
@@ -61,8 +66,8 @@ class Core:
         """Change the bot's nickname"""
         try:
             await ctx.guild.get_member(self.bot.user.id).edit(nick=name)
-        except discord.HTTPException:
-            await ctx.send('Changing the name failed.')
+        except (discord.HTTPException, discord.Forbidden):
+            await ctx.send('Unyu? What\'s my name again?')
 
     @commands.command()
     @commands.is_owner()
@@ -83,14 +88,14 @@ class Core:
     async def die(self, ctx):
         """Shuts down the bot"""
         ctx.bot.dying = True
-        await ctx.send(':wave:')
+        await ctx.send('<:power:383084655764832256>Pichuun~<:power:383084655764832256>')
         await ctx.bot.logout()
 
     @commands.command(aliases=['git_pull'])
     async def update(self, ctx):
         """Updates the bot from git"""
 
-        await ctx.send(':warning: Warning! Pulling from git!')
+        await ctx.send(':radioactive: Warning! :radioactive: Warning! :radioactive: Pulling from git!')
 
         if sys.platform == 'win32':
             process = subprocess.run('git pull', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -110,7 +115,7 @@ class Core:
     async def revert(self, ctx, commit):
         """Revert local copy to specified commit"""
 
-        await ctx.send(':warning: Warning! Reverting!')
+        await ctx.send(':radioactive: Warning! :radioactive: Warning! :radioactive: Reverting!')
 
         if sys.platform == 'win32':
             process = subprocess.run('git reset --hard {}'.format(commit), shell=True, stdout=subprocess.PIPE,
