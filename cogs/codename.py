@@ -31,7 +31,8 @@ class Codenames:
                 return await ctx.send('Just... No.')
             else:
                 ctx.bot.board.set_hint_number(n)
-            
+
+        ctx.bot.board.hint_word = f'"{word}: {n}"'
         mention = ctx.bot.roles['red'] if ctx.bot.board.turn == Teams.RED else ctx.bot.roles['blue']
         await ctx.bot.get_channel(ctx.bot.config['channel']).send(
             '<@&{}> The hint is "{}: {}"'.format(mention, word, n)
@@ -73,8 +74,16 @@ class Codenames:
         ctx.send('Turn skipped.')
         mention = ctx.bot.roles['red_sm'] if ctx.bot.board.turn == Teams.RED else ctx.bot.roles['blue_sm']
         await chan.send('<@&{}> It\'s your turn to make a hint!'.format(mention))
+
+    @commands.command
+    @checks.player()
+    async def get_hint(self, ctx):
+        try: await ctx.send(ctx.bot.board.hint_word)
+        except AttributeError:
+            await ctx.send('There is no hint!')
         
     @commands.command()
+    @commands.cooldown(1, 15, commands.BucketType.guild)
     async def board(self, ctx):
         """Show the board"""
         ctx.bot.board.draw().save('board.png')
