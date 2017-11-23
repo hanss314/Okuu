@@ -78,6 +78,7 @@ class Codenames:
     @commands.command()
     @checks.player()
     async def get_hint(self, ctx):
+        """Get the current hint"""
         try: await ctx.send(ctx.bot.board.hint_word)
         except AttributeError:
             await ctx.send('There is no hint!')
