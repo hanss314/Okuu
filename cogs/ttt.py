@@ -50,7 +50,7 @@ class TTT:
             legal_moves = [x[:2] for x in board.get_legal_moves()]
             if (x, y) in legal_moves:
                 board.next_play = (x, y)
-                await ctx.send(f'{ctx.author.mention}, your move will be made on board {board.next_play}')
+                await ctx.send(f'{ctx.author.mention}, your move will be made on board {board.next_play} ```\n{board.to_UI()}```')
                 return
             else:
                 await ctx.send(f'{ctx.author.mention} that is not a playable board.')
