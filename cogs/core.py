@@ -12,6 +12,7 @@ class Core:
         self.bot = bot
 
     @commands.command()
+    @commands.is_owner()
     async def say(self, ctx, channel: discord.TextChannel, *, text: str):
         await channel.send(text)
 
