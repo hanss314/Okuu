@@ -27,7 +27,7 @@ class TTT:
             board = UTTT_Board()
             game = (ctx.author.id,)
             boards[game] = board
-        elif len(game) == 1:
+        elif len(game) == 1 and ctx.author.id not in game:
             board = boards[game]
             del boards[game]
             game = (game[0], ctx.author.id)
