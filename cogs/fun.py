@@ -7,7 +7,7 @@ from discord.ext import commands
 ascii_digit = '0123456789'
 
 def number(arg: str) -> complex:
-    arg.replace('i', 'j')
+    arg = arg.replace('i', 'j')
     return complex(arg)
 
 def factor(x):
