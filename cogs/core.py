@@ -2,6 +2,7 @@ import sys
 import discord
 import subprocess
 import asyncio
+import inspect
 
 from discord.ext import commands
 
@@ -165,6 +166,36 @@ class Core:
                 os.remove('gitlog.txt')
         else:
             await ctx.send('`Git` response: ```diff\n{}\n{}```'.format(stdout, stderr))
+
+    @commands.command(aliases=['eval'])
+    @commands.is_owner()
+    async def debug(self, ctx, *, code: str):
+        '''Evaluates code'''
+
+        env = {
+            'ctx': ctx,
+            'bot': ctx.bot,
+            'guild': ctx.guild,
+            'author': ctx.author,
+            'message': ctx.message,
+            'channel': ctx.channel
+        }
+        env.update(globals())
+
+        try:
+            result = eval(code, env)
+
+            if inspect.isawaitable(result):
+                result = await result
+
+            colour = 0x00FF00
+        except Exception as e:
+            result = type(e).__name__ + ': ' + str(e)
+            colour = 0xFF0000
+
+        embed = discord.Embed(colour=colour, title=code, description='```py\n{}```'.format(result))
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
 
 
 def setup(bot):
