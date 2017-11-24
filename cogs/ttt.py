@@ -7,13 +7,14 @@ class TTT:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
-    async def uttt(self, ctx, x: int, y: int):
+    @commands.group(invoke_without_command=True)
+    async def uttt(self, ctx, row: int, column: int):
         '''
         Use this command to start and play a uttt game.
         To start a game, the x and y coordinates are the sub-board of your first move
         Use this command to specify the sub-board when needed and make a move when sub-board is specified
         '''
+        x, y = row, column
         game = None
         boards = self.bot.uttt_boards[ctx.guild.id]
         for k in boards.keys():
@@ -57,6 +58,8 @@ class TTT:
             board.turn = board.turn % 2 + 1
             if winner != 0:
                 await ctx.send(f'<@{game[winner-1]}> has won! ```\n{board.to_UI()}```')
+                del boards[game]
+                del board
                 return
             else:
                 if len(game) == 1:
@@ -78,6 +81,17 @@ class TTT:
             self.bot.uttt_boards = {}
         if ctx.guild.id not in self.bot.uttt_boards:
             self.bot.uttt_boards[ctx.guild.id] = {}
+
+    @uttt.command(name='help')
+    async def uttt_help(self, ctx):
+        d = '**Rules:**\n'
+        d += '''
+Win three games of Tic Tac Toe in a row. 
+You may only play in the big field that corresponds to the last small field your opponent played. 
+When your are sent to a field that is already decided, you can choose freely. 
+https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/
+        '''
+        await ctx.send(d)
 
 
 def setup(bot):
