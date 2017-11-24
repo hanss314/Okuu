@@ -182,7 +182,7 @@ class UTTT_Board(list):
             d = ' ' * (self.next_play[1]*4 + 1) + '012\n'
 
         for n, row in enumerate(rows):
-            if self.next_play == 0 and d % 4 == 1:
+            if self.next_play == 0 and n % 4 == 1:
                 d += f'{n//4}{row}\n'
             elif n//4 == self.next_play[0] and n % 4 != 3:
                 d += f'{n%4}{row}\n'
