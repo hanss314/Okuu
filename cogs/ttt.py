@@ -82,8 +82,28 @@ class TTT:
         if ctx.guild.id not in self.bot.uttt_boards:
             self.bot.uttt_boards[ctx.guild.id] = {}
 
+    @uttt.command(name='cancel')
+    async def uttt_cancel(self, ctx):
+        '''Cancel a game of UTTT'''
+        boards = self.bot.uttt_boards[ctx.guild.id]
+        for k in boards.keys():
+            if ctx.author.id in k:
+                game = k
+                break
+        else:
+            return await ctx.send('You have no game running.')
+
+        del boards[game]
+        if len(game) > 1:
+            other = ctx.guild.get_member(game[game.index(ctx.author.id)-1])
+            await ctx.send(f'{ctx.author.mention} Cancelled your game against {other.mention}.')
+        else:
+            await ctx.send(f'{ctx.author.mention} Game cancelled.')
+
+
     @uttt.command(name='help')
     async def uttt_help(self, ctx):
+        '''Gives you help on UTTT'''
         d = '**Rules:**\n'
         d += '''
 Win three games of Tic Tac Toe in a row. 
