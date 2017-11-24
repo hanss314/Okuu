@@ -68,9 +68,7 @@ class Fun:
     @commands.group(invoke_without_command=True)
     async def numberwang(self, ctx, *, num: number):
         '''
-        Use this command to start and play a uttt game.
-        To start a game, the x and y coordinates are the sub-board of your first move
-        Use this command to specify the sub-board when needed and make a move when sub-board is specified
+        See if a number is numberwang.
         '''
         async with ctx.typing():
             is_numberwang = self.check_numberwang(num)
