@@ -183,11 +183,10 @@ class UTTT_Board(list):
 
         for n, row in enumerate(rows):
             if self.next_play == 0 and d % 4 == 1:
-                d += f'{d//4}{row}\n'
-            elif n//4 == self.next_play[0] and d % 4 != 3:
-                d += f'{d%4}{row}\n'
+                d += f'{n//4}{row}\n'
+            elif n//4 == self.next_play[0] and n % 4 != 3:
+                d += f'{n%4}{row}\n'
             else:
                 d += f' {row}\n'
-
 
         return d
