@@ -1,10 +1,21 @@
 import hashlib
 import math
+import random
 from string import ascii_lowercase
 
 from discord.ext import commands
 
 ascii_digit = '0123456789'
+wrongs = [
+    'Oof',
+    'Nope',
+    'Not quite',
+    'Almost',
+    'Not a chance',
+    'Are you even trying?',
+    'Way off',
+    'So close',
+]
 
 def number(arg: str) -> complex:
     arg = arg.replace('i', 'j')
@@ -35,6 +46,7 @@ class Fun:
     def __init__(self, bot):
         import os
         self.bot = bot
+        self.wangernumb = False
         if os.path.exists('./lastwang'):
             self.lastwang = open('./lastwang').readline()
         else:
@@ -62,8 +74,7 @@ class Fun:
         lw = self.int(''.join(c for c in self.hash(factor(lw) ^ factor(istr)) if c in ascii_digit))
         lw, rstr = int(str(lw)[-int(str(rstr)[0]) // 2 - 5:]), int(str(rstr)[-int(str(lw)[0]) // 2 - 5:])
         final =  p_factor(lw) & p_factor(rstr)
-        print(final)
-        return len(final) > 0
+        return len(final) > 0, len(final) > 0
 
     @commands.group(invoke_without_command=True)
     async def numberwang(self, ctx, *, num: number):
@@ -71,16 +82,27 @@ class Fun:
         See if a number is numberwang.
         '''
         async with ctx.typing():
-            is_numberwang = self.check_numberwang(num)
+            is_numberwang, wangernumb = self.check_numberwang(num)
+
 
         if is_numberwang:
             self.lastwang = self.hash(num)
             open('./lastwang', 'w').write(self.lastwang)
-            await ctx.send(f'{ctx.author.mention} That\'s numberwang!')
+            if not self.wangernumb:
+                await ctx.send(f'{ctx.author.mention} That\'s numberwang!')
+                if wangernumb:
+                    self.wangernumb = True
+                    await ctx.send('Let\'s rotate the board!')
+
+            else:
+                await ctx.send('That\'s WangerNumb!')
+                self.wangernumb = False
+
         else:
-            await ctx.send(f'I\'m sorry {ctx.author.mention}, but that is not numberwang.')
-
-
+            if not self.wangernumb:
+                await ctx.send(f'I\'m sorry {ctx.author.mention}, but that is not numberwang.')
+            else:
+                await ctx.send(random.choice(wrongs))
 
 
 def setup(bot):
