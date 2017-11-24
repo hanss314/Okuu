@@ -176,5 +176,4 @@ class UTTT_Board(list):
             if i < 2:
                 rows[4 * i + 3] = '---+---+---'
 
-        print('\n'.join(rows))
-        print('\n')
+        return '\n'.join(rows)

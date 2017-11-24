@@ -7,23 +7,15 @@ class TTT:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group(invoke_without_command=True)
-    async def uttt(self, ctx):
-        '''Play a game of ultimate tic tac toe'''
-        m = 'Subcommands:\n'
-        for command in ctx.command.commands:
-            m += f'`{command.name}`-{command.brief}\n'
-        await ctx.send(m)
-
-    @uttt.command(name='play')
-    async def uttt_play(self, ctx, x: int, y: int):
+    @commands.command()
+    async def uttt(self, ctx, x: int, y: int):
         '''
-        Use this command to start a game and to play a game.
+        Use this command to start and play a uttt game.
         To start a game, the x and y coordinates are the sub-board of your first move
         Use this command to specify the sub-board when needed and make a move when sub-board is specified
         '''
         game = None
-        boards = self.bot.uttt_boards
+        boards = self.bot.uttt_boards[ctx.guild.id]
         for k in boards.keys():
             if ctx.author.id in k:
                 game = k
@@ -66,19 +58,25 @@ class TTT:
                 await ctx.send(f'<@{game[winner-1]}> has won! ```\n{board.to_UI()}```')
                 return
             else:
-                if board.next_play == 0:
-                    await ctx.send(
-                        f'<@{game[winner-1]}> your turn, select a sub-board to play on using `{ctx.prefix}utt play` ```\n{board.to_UI()}```'
-                    )
+                if len(game) == 1:
+                    d = 'Anyone\'s turn'
                 else:
-                    await ctx.send(
-                        f'<@{game[board.turn-1]}> your turn, you are playing on sub-board {board.next_play}. ```\n{board.to_UI()}```'
-                    )
+                    d = f'<@{game[board.turn-1]}> your turn'
 
-    @uttt_play.before_invoke
+                if board.next_play == 0:
+                    d += f', select a sub-board to play on using `{ctx.prefix}utt play` ```\n{board.to_UI()}```'
+                else:
+                    d += f', you are playing on sub-board {board.next_play}. ```\n{board.to_UI()}```'
+
+                await ctx.send(d)
+
+
+    @uttt.before_invoke
     async def check_board(self, ctx):
         if not hasattr(self.bot, 'uttt_boards'):
             self.bot.uttt_boards = {}
+        if ctx.guild.id not in self.bot.uttt_boards:
+            self.bot.uttt_boards[ctx.guild.id] = {}
 
 
 def setup(bot):
