@@ -25,7 +25,8 @@ class TTT:
 
         if not game:
             board = UTTT_Board()
-            boards[(ctx.author.id,)] = board
+            game = (ctx.author.id,)
+            boards[game] = board
         elif len(game) == 1:
             board = boards[game]
             del boards[game]
