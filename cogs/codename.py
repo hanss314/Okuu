@@ -87,7 +87,11 @@ class Codenames:
     @commands.cooldown(1, 15, commands.BucketType.guild)
     async def board(self, ctx):
         """Show the board"""
-        ctx.bot.board.draw().save('board.png')
+        if ctx.bot.board is None: await ctx.send('There is no board.')
+        if ctx.channel.id == ctx.bot.config['revealed']:
+            ctx.bot.board.draw(True).save('board.png')
+        else:
+            ctx.bot.board.draw().save('board.png')
         img = discord.File(open('board.png', 'rb'))
         await ctx.send(file=img)
 

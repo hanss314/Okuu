@@ -14,8 +14,6 @@ class TTT:
         To start a game, the x and y coordinates are the sub-board of your first move
         Use this command to specify the sub-board when needed and make a move when sub-board is specified
         '''
-        x, y = y, x
-
         game = None
         boards = self.bot.uttt_boards[ctx.guild.id]
         for k in boards.keys():
