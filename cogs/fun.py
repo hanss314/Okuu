@@ -74,7 +74,7 @@ class Fun:
         lw = self.int(''.join(c for c in self.hash(factor(lw) ^ factor(istr)) if c in ascii_digit))
         lw, rstr = int(str(lw)[-int(str(rstr)[0]) // 2 - 5:]), int(str(rstr)[-int(str(lw)[0]) // 2 - 5:])
         final =  p_factor(lw) & p_factor(rstr)
-        return len(final) > 0, len(final) > 0
+        return len(final) > 0, len(final) > 1
 
     @commands.group(invoke_without_command=True)
     async def numberwang(self, ctx, *, num: number):
