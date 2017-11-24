@@ -86,7 +86,7 @@ class Fun:
 
 
         if is_numberwang:
-            self.lastwang = self.hash(num)
+            self.lastwang = self.hash(self.lastwang + str(num))
             open('./lastwang', 'w').write(self.lastwang)
             if not self.wangernumb:
                 await ctx.send(f'{ctx.author.mention} That\'s numberwang!')
@@ -101,6 +101,8 @@ class Fun:
         else:
             if not self.wangernumb:
                 await ctx.send(f'I\'m sorry {ctx.author.mention}, but that is not numberwang.')
+                self.lastwang = self.hash(self.lastwang + str(num))
+                open('./lastwang', 'w').write(self.lastwang)
             else:
                 await ctx.send(random.choice(wrongs))
 
