@@ -63,8 +63,8 @@ class Fun:
         except ValueError: return 1
 
     def check_numberwang(self, num):
-        r = num.real
-        i = num.imag
+        r = num
+        i = type(num)
         rstr = ''.join(c for c in self.hash(r) if c in ascii_lowercase)
         istr = self.int(''.join(c for c in self.hash(i) if c in ascii_digit))
         rstr = self.int(''.join(c for c in self.hash(rstr) if c in ascii_digit))
