@@ -77,6 +77,7 @@ class Fun:
         return len(final) > 0, len(final) > 1
 
     @commands.group(invoke_without_command=True)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def numberwang(self, ctx, *, num):
         '''
         See if a number is numberwang.
