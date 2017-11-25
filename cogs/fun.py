@@ -64,7 +64,7 @@ class Fun:
 
     def check_numberwang(self, num):
         r = num
-        i = type(num)
+        i = num.__dir__
         rstr = ''.join(c for c in self.hash(r) if c in ascii_lowercase)
         istr = self.int(''.join(c for c in self.hash(i) if c in ascii_digit))
         rstr = self.int(''.join(c for c in self.hash(rstr) if c in ascii_digit))
