@@ -77,7 +77,7 @@ class Fun:
         return len(final) > 0, len(final) > 1
 
     @commands.group(invoke_without_command=True)
-    async def numberwang(self, ctx, *, num: number):
+    async def numberwang(self, ctx, *, num):
         '''
         See if a number is numberwang.
         '''
