@@ -244,7 +244,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         game.buy()
         winner = game.check_win()
         if winner >= 0:
-            await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
+            await ctx.send(f'{game.avocados} has been reached before! <@{players[winner-1]}> wins!')
             del self.bot.avocados[ctx.channel.id][players]
             return
 
