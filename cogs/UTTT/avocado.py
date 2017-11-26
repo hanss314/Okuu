@@ -40,9 +40,9 @@ class MultiplayerAvocado:
     def eat(self):
         if self.avocados < self.spoon:
             raise ValueError
-        self.previous.append(self.avocados)
         self.move_made = True
         self.avocados -= self.spoon
+        self.previous.append(self.avocados)
 
     def buy(self):
         self.avocados += self.spoon

@@ -155,7 +155,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         game, board = self.get_game(ctx.author.id, boards, MultiplayerAvocado)
         if len(game) == 1:
             board.avocados = number
-            board.previous = []
+            board.previous = [number]
             await ctx.send(f'{ctx.author.mention} Started a game with {number} avocado{"s" if number != 1 else ""}!')
         else:
             board.spoon = number
