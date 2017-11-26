@@ -27,25 +27,25 @@ class MultiplayerAvocado:
             self.avocados = num
         else:
             raise ValueError
-        self.previous.add(self.avocados)
+        self.previous.append(self.avocados)
         self.move_made = True
         self.switch_turn()
 
     def mash(self):
         self.avocados = self.avocados ** 2
-        self.previous.add(self.avocados)
+        self.previous.append(self.avocados)
         self.move_made = True
         self.switch_turn()
 
     def eat(self):
         if self.avocados < self.spoon:
             raise ValueError
-        self.previous.add(self.avocados)
+        self.previous.append(self.avocados)
         self.move_made = True
         self.avocados -= self.spoon
 
     def buy(self):
         self.avocados += self.spoon
-        self.previous.add(self.avocados)
+        self.previous.append(self.avocados)
         self.move_made = True
         self.switch_turn()
