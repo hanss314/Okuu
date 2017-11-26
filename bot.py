@@ -56,14 +56,17 @@ class CodeNamesBot(commands.Bot):
             return
         
         if isinstance(exception, commands.CheckFailure):
-            await ctx.send('Unyu?')
-        elif isinstance(exception, commands.CommandNotFound):
+            await ctx.send(
+                'Foreign substance detected! ...what do I do again? Whatever, I\'ll just ~~exterminate~~ ignore it.',
+                delete_after = 10
+            )
+        elif isinstance(exception, commands.CommandNotFound) or isinstance(exception, self.ErrorAlreadyShown):
             pass
         elif isinstance(exception, commands.UserInputError):
             error = ' '.join(exception.args)
             error_data = re.findall('Converting to \"(.*)\" failed for parameter \"(.*)\"\.', error)
             if not error_data:
-                await ctx.send('Foreign substance detected!: {}'.format(' '.join(exception.args)))
+                await ctx.send('Unyu? {}'.format(' '.join(exception.args)))
             else:
                 await ctx.send('Unyu? I thought `{1}` was supposed to be a `{0}`...'.format(*error_data[0]))
         else:
