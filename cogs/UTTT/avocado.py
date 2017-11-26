@@ -5,10 +5,10 @@ class MultiplayerAvocado:
         self.spoon = spoon
         self.move_made = False
         self.turn = 0
-        self.previous = {avocados}
+        self.previous = [avocados]
 
     def check_win(self):
-        if self.avocados in self.previous:
+        if self.avocados in self.previous[:-1]:
             return self.turn
         else:
             return -1

@@ -155,7 +155,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         game, board = self.get_game(ctx.author.id, boards, MultiplayerAvocado)
         if len(game) == 1:
             board.avocados = number
-            board.previous = set()
+            board.previous = []
             await ctx.send(f'{ctx.author.mention} Started a game with {number} avocado{"s" if number != 1 else ""}!')
         else:
             board.spoon = number
@@ -197,7 +197,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         winner = game.check_win()
         if winner >= 0:
             await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
-            del self.bot.avocados[ctx.channel.id][game]
+            del self.bot.avocados[ctx.channel.id][players]
             return
 
     @avocado.command(name='mash')
@@ -209,7 +209,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         winner = game.check_win()
         if winner >= 0:
             await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
-            del self.bot.avocados[ctx.channel.id][game]
+            del self.bot.avocados[ctx.channel.id][players]
             return
 
         await ctx.send(f'<@{players[game.turn]}> your turn, ' +
@@ -231,7 +231,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
             winner = game.check_win()
             if winner >= 0:
                 await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
-                del self.bot.avocados[ctx.channel.id][game]
+                del self.bot.avocados[ctx.channel.id][players]
                 return
 
         await ctx.send(f'There are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
@@ -245,7 +245,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         winner = game.check_win()
         if winner >= 0:
             await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
-            del self.bot.avocados[ctx.channel.id][game]
+            del self.bot.avocados[ctx.channel.id][players]
             return
 
         await ctx.send(f'<@{players[game.turn]}> your turn, ' +
