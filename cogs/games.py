@@ -163,7 +163,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
                 f'<@{game[0]}> your turn. Spoon size is {number}.' +
                 f'There are {board.avocados} avocado{"s" if board.avocados != 1 else ""}')
 
-    async def get_avocado_game(self, ctx):
+    async def get_avocado_game(self, ctx, error=True):
         await self.check_avocado(ctx)
         try:
             players, game = self.get_game(
@@ -177,8 +177,10 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
             await ctx.send('You aren\'t in a game!')
             raise e
 
-        await ctx.send('It\'s not your turn!')
-        raise ValueError
+        if error:
+            await ctx.send('It\'s not your turn!')
+            raise ValueError
+        else: return players, game
 
     @avocado.command(name='slice')
     async def avocado_slice(self, ctx, number: int):
@@ -265,7 +267,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     async def avocado_cancel(self, ctx):
         """Cancel a game of Multiplayer Avocado"""
         try:
-            players, game = await self.get_avocado_game(ctx)
+            players, game = await self.get_avocado_game(ctx, False)
         except ValueError:
             return
         del self.bot.avocados[ctx.channel.id][players]
@@ -277,7 +279,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     @avocado.command(name='previous')
     async def avocado_previous(self, ctx):
         """Check previous Avocado counts"""
-        try: players, game = await self.get_avocado_game(ctx)
+        try: players, game = await self.get_avocado_game(ctx, False)
         except ValueError: return
         await ctx.send(str(game.previous))
 
