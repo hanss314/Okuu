@@ -79,12 +79,11 @@ class Board:
         for col in self._board:
             for tile in col:
                 if not tile.uncovered:
-                    if not tile.uncovered:
-                        if tile.state == TileStates.RED:
-                            red_win = False
-                        elif tile.state == TileStates.BLUE:
-                            blue_win = False
-                            
+                    if tile.state == TileStates.RED:
+                        red_win = False
+                    elif tile.state == TileStates.BLUE:
+                        blue_win = False
+
         if red_win: self.winner = Teams.RED
         elif blue_win: self.winner = Teams.BLUE
         return self.winner
