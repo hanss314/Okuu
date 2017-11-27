@@ -143,10 +143,10 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
 
         await ctx.send(d)
 
-
     @avocado.command(name='join')
     async def avocado_join(self, ctx, *, number: avocados):
         """Start a game of Multiplayer Avocado"""
+        if number < 0: return await ctx.send('No negative avocados please.')
         boards = self.bot.avocados[ctx.guild.id]
         for players in boards.keys():
             if ctx.author.id in players:
