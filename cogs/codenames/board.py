@@ -125,8 +125,8 @@ class Tile:
         drawer = ImageDraw.Draw(img)
         color = None
         if unhidden or self.uncovered:
-            if self.state == TileStates.RED: color = (205,0,0)
-            elif self.state == TileStates.BLUE: color = (0,0,205)
+            if self.state == TileStates.RED: color = (216, 108, 112)
+            elif self.state == TileStates.BLUE: color = (112, 108, 216)
             elif self.state == TileStates.BYSTANDER: color = (239,224,96)
             elif self.state == TileStates.ASSASSIN: color = (128,128,128)
         else:
