@@ -245,7 +245,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
 
         await ctx.send(f'There are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
 
-    @avocado.command(name='buy')
+    @avocado.command(name='buy', aliases=['avo', '🎮🥑🎮'])
     async def avocado_buy(self, ctx):
         """Buy some Avocados"""
         try: players, game = await self.get_avocado_game(ctx)
