@@ -33,6 +33,7 @@ class MultiplayerAvocado:
 
     def mash(self):
         self.avocados = self.avocados ** 2
+        self.avocados %= 2 ** 64
         self.previous.append(self.avocados)
         self.move_made = True
         self.switch_turn()
@@ -46,6 +47,7 @@ class MultiplayerAvocado:
 
     def buy(self):
         self.avocados += self.spoon
+        self.avocados %= 2 ** 64
         self.previous.append(self.avocados)
         self.move_made = True
         self.switch_turn()
