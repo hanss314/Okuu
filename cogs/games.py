@@ -127,7 +127,7 @@ When your are sent to a field that is already decided, you can choose freely.
         '''
         await ctx.send(d)
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, aliases=['avo', '🎮🥑🎮'])
     async def avocado(self, ctx):
         """Play a game of Multiplayer Avocado!"""
         d = '''Rules for Multiplayer Avocado:
@@ -245,7 +245,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
 
         await ctx.send(f'There are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
 
-    @avocado.command(name='buy', aliases=['avo', '🎮🥑🎮'])
+    @avocado.command(name='buy')
     async def avocado_buy(self, ctx):
         """Buy some Avocados"""
         try: players, game = await self.get_avocado_game(ctx)
