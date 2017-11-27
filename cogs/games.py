@@ -200,7 +200,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         winner = game.check_win()
         if winner >= 0:
             await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
-            del self.bot.avocados[ctx.channel.id][players]
+            del self.bot.avocados[ctx.guild.id][players]
             return
 
     @avocado.command(name='mash')
@@ -212,7 +212,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         winner = game.check_win()
         if winner >= 0:
             await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
-            del self.bot.avocados[ctx.channel.id][players]
+            del self.bot.avocados[ctx.guild.id][players]
             return
 
         await ctx.send(f'<@{players[game.turn]}> your turn, ' +
@@ -234,7 +234,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
             winner = game.check_win()
             if winner >= 0:
                 await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
-                del self.bot.avocados[ctx.channel.id][players]
+                del self.bot.avocados[ctx.guild.id][players]
                 return
 
         await ctx.send(f'There are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
@@ -248,7 +248,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         winner = game.check_win()
         if winner >= 0:
             await ctx.send(f'{game.avocados} has been reached before! <@{players[winner-1]}> wins!')
-            del self.bot.avocados[ctx.channel.id][players]
+            del self.bot.avocados[ctx.guild.id][players]
             return
 
         await ctx.send(f'<@{players[game.turn]}> your turn, ' +
@@ -273,7 +273,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
             players, game = await self.get_avocado_game(ctx, False)
         except ValueError:
             return
-        del self.bot.avocados[ctx.channel.id][players]
+        del self.bot.avocados[ctx.guild.id][players]
         if len(players) > 1:
             await ctx.send(f'Cancelled your game with <@{players[players.index(ctx.author.id) - 1]}>')
         else:
