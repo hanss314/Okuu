@@ -165,6 +165,9 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
 
     async def get_avocado_game(self, ctx, error=True):
         await self.check_avocado(ctx)
+        if (ctx.author.id,) in self.bot.avocados[ctx.guild.id]:
+            await ctx.send('It\'s not your turn!')
+            raise ValueError
         try:
             players, game = self.get_game(
                     ctx.author.id,
