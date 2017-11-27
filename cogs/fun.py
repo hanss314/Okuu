@@ -107,6 +107,10 @@ class Fun:
             else:
                 await ctx.send(random.choice(wrongs))
 
+    @number.command(name='leaderboard', aliases=['lead', 'lb'])
+    async def numberwang_leaderboard(self, ctx):
+
+
 
 def setup(bot):
     bot.add_cog(Fun(bot))

@@ -53,7 +53,7 @@ class Codenames:
         img = discord.File(open('board.png', 'rb'))
         await chan.send(file=img)
         if result is not None:
-            mention = ctx.bot.roles['red'] if ctx.bot.board.turn == Teams.RED else ctx.bot.roles['blue']
+            mention = ctx.bot.roles['red'] if result == Teams.RED else ctx.bot.roles['blue']
             await chan.send('<@&{}> You win! Good job!'.format(mention))
             await self.rem_roles(ctx)
             ctx.bot.board.draw(unhidden=True).save('board.png')
