@@ -158,6 +158,12 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
             board.previous = [number]
             await ctx.send(f'{ctx.author.mention} Started a game with {number} avocado{"s" if number != 1 else ""}!')
         else:
+            if number < 1:
+                await ctx.send('Spoon size must be greater than 0!')
+                boards[(game[0],)] = board
+                del board[game]
+                return
+
             board.spoon = number
             await ctx.send(
                 f'<@{game[0]}> your turn. Spoon size is {number}.' +
