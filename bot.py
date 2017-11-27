@@ -60,6 +60,9 @@ class CodeNamesBot(commands.Bot):
                 'Foreign substance detected! ...what do I do again? Whatever, I\'ll just ~~exterminate~~ ignore it.',
                 delete_after = 10
             )
+        elif isinstance(exception, commands.CommandOnCooldown):
+            await ctx.send(f'Overheating! Try again in {exception.retry_after:.2f} seconds.')
+
         elif isinstance(exception, commands.CommandNotFound) or isinstance(exception, self.ErrorAlreadyShown):
             pass
         elif isinstance(exception, commands.UserInputError):

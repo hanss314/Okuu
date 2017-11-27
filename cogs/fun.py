@@ -1,7 +1,9 @@
 import hashlib
 import math
 import random
+
 from string import ascii_lowercase
+from ruamel import yaml
 
 from discord.ext import commands
 
@@ -47,11 +49,15 @@ class Fun:
         import os
         self.bot = bot
         self.wangernumb = False
-        if os.path.exists('./lastwang'):
-            self.lastwang = open('./lastwang').readline()
+        if os.path.exists('./wangs.yml'):
+            wangs = yaml.safe_load(open('./wangs.yml'))
         else:
-            self.lastwang = self.hash(1)
-            open('./lastwang', 'w').write(self.lastwang)
+            wangs = {'lastwang': self.hash(1), 'leaderboard': {}}
+            yaml.dump(wangs, open('./wangs.yml', 'w'))
+
+        self.lastwang = wangs['lastwang']
+        self.leaderboard = wangs['leaderboard']
+
 
     @staticmethod
     def hash(object):
@@ -61,6 +67,12 @@ class Fun:
     def int(string: str) -> int:
         try: return int(string)
         except ValueError: return 1
+
+    def write_wangfile(self):
+        yaml.dump(
+            {'lastwang': self.lastwang, 'leaderboard': self.leaderboard},
+            open('./wangs.yml', 'w')
+        )
 
     def check_numberwang(self, num):
         r = num
@@ -91,6 +103,9 @@ class Fun:
             open('./lastwang', 'w').write(self.lastwang)
             if not self.wangernumb:
                 await ctx.send(f'{ctx.author.mention} That\'s numberwang!')
+                self.lastwang = self.hash(str(num)+self.lastwang[0])
+                try: self.leaderboard[ctx.author.id] += 1
+                except KeyError: self.leaderboard[ctx.author.id] = 1
                 if wangernumb:
                     self.wangernumb = True
                     await ctx.send('Let\'s rotate the board!')
@@ -98,17 +113,43 @@ class Fun:
             else:
                 await ctx.send('That\'s WangerNumb!')
                 self.wangernumb = False
+                try: self.leaderboard[ctx.author.id] += 2
+                except KeyError: self.leaderboard[ctx.author.id] = 2
+
+            self.write_wangfile()
 
         else:
             if not self.wangernumb:
                 await ctx.send(f'I\'m sorry {ctx.author.mention}, but that is not numberwang.')
                 self.lastwang = self.hash(self.lastwang + str(num))
-                open('./lastwang', 'w').write(self.lastwang)
+                self.write_wangfile()
             else:
                 await ctx.send(random.choice(wrongs))
 
-    @number.command(name='leaderboard', aliases=['lead', 'lb'])
+    @numberwang.command(name='leaderboard', aliases=['lead', 'lb'])
+    @commands.cooldown(1, 15, commands.BucketType.channel)
     async def numberwang_leaderboard(self, ctx):
+        leaders = sorted([(score, uid) for uid, score in self.leaderboard.items()], reverse=True)
+        leaders = leaders[:10]
+        d = '**__Leaderboard:__**\n'
+        for n, k in enumerate(leaders):
+            score, uid = k
+            user = ctx.guild.get_member(uid)
+            if user: line = f'**{user.name}**: '
+            else: line = f'{uid}: '
+            if ord(self.lastwang[-n-1]) % 2: line += 'Leading '
+            else: line += 'Trailing '
+            left = score*ord(self.lastwang[-n-2])//ord(self.lastwang[-n-3])
+            right = ord(self.lastwang[-n-2])*ord(self.lastwang[-n-3])
+            if ord(self.lastwang[-n-2]) % 2: line += f'`{left} - {right}`'
+            else: line += f'`{right} - {left}`'
+            d += f'{line}\n'
+
+        await ctx.send(d)
+
+    @commands.command(aliases=['ping'])
+    async def birb(self, ctx):
+        await ctx.send('Tis a birb. A dangerous birb. An incredibly dangerous birb. Birb.')
 
 
 
