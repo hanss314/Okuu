@@ -142,7 +142,7 @@ class Fun:
             else: line += 'Trailing '
             left = score*ord(self.lastwang[-n-2])//ord(self.lastwang[-n-3])
             right = ord(self.lastwang[-n-2])*ord(self.lastwang[-n-3])
-            right %= left*3//2
+            right %= (left*3//2) + 1
             if ord(self.lastwang[-n-2]) % 2: line += f'`{left} - {right}`'
             else: line += f'`{right} - {left}`'
             d += f'{line}\n'
