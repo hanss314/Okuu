@@ -84,6 +84,13 @@ class Misc:
             pass
 
     @commands.command()
+    async def invite(self, ctx):
+        await ctx.send(
+            '*Invite me to your server:* '+
+            f'<https://discordapp.com/oauth2/authorize?client_id={ctx.bot.user.id}&scope=bot>'
+        )
+
+    @commands.command()
     async def help(self, ctx, *args):
         """This help message"""
         if len(args) == 0:

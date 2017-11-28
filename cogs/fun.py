@@ -58,7 +58,6 @@ class Fun:
         self.lastwang = wangs['lastwang']
         self.leaderboard = wangs['leaderboard']
 
-
     @staticmethod
     def hash(object):
         return hashlib.sha512(bytes(repr(object), 'utf8')).hexdigest()
@@ -90,6 +89,7 @@ class Fun:
 
     @commands.group(invoke_without_command=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.guild_only()
     async def numberwang(self, ctx, *, num):
         '''
         See if a number is numberwang.
@@ -104,8 +104,8 @@ class Fun:
             if not self.wangernumb:
                 await ctx.send(f'{ctx.author.mention} That\'s numberwang!')
                 self.lastwang = self.hash(str(num)+self.lastwang[0])
-                try: self.leaderboard[ctx.author.id] += 1
-                except KeyError: self.leaderboard[ctx.author.id] = 1
+                try: self.leaderboard[ctx.guild.id][ctx.author.id] += 1
+                except KeyError: self.leaderboard[ctx.guild.id][ctx.author.id] = 1
                 if wangernumb:
                     self.wangernumb = True
                     await ctx.send('Let\'s rotate the board!')
@@ -113,8 +113,8 @@ class Fun:
             else:
                 await ctx.send('That\'s WangerNumb!')
                 self.wangernumb = False
-                try: self.leaderboard[ctx.author.id] += 2
-                except KeyError: self.leaderboard[ctx.author.id] = 2
+                try: self.leaderboard[ctx.guild.id][ctx.author.id] += 2
+                except KeyError: self.leaderboard[ctx.guild.id][ctx.author.id] = 2
 
             self.write_wangfile()
 
@@ -128,8 +128,9 @@ class Fun:
 
     @numberwang.command(name='leaderboard', aliases=['lead', 'lb'])
     @commands.cooldown(1, 15, commands.BucketType.channel)
+    @commands.guild_only()
     async def numberwang_leaderboard(self, ctx):
-        leaders = sorted([(score, uid) for uid, score in self.leaderboard.items()], reverse=True)
+        leaders = sorted([(score, uid) for uid, score in self.leaderboard[ctx.guild.id].items()], reverse=True)
         leaders = leaders[:10]
         d = '**__Leaderboard:__**\n'
         for n, k in enumerate(leaders):

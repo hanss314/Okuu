@@ -40,6 +40,7 @@ class Games:
 
 
     @commands.group(invoke_without_command=True)
+    @commands.guild_only()
     async def uttt(self, ctx, row: int, column: int):
         '''
         Use this command to start and play a uttt game.
@@ -97,6 +98,7 @@ class Games:
             self.bot.uttt_boards[ctx.guild.id] = {}
 
     @uttt.command(name='cancel')
+    @commands.guild_only()
     async def uttt_cancel(self, ctx):
         '''Cancel a game of UTTT'''
         boards = self.bot.uttt_boards[ctx.guild.id]
@@ -144,6 +146,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         await ctx.send(d)
 
     @avocado.command(name='join')
+    @commands.guild_only()
     async def avocado_join(self, ctx, *, number: avocados):
         """Start a game of Multiplayer Avocado"""
         if number < 0: return await ctx.send('No negative avocados please.')
@@ -192,6 +195,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         else: return players, game
 
     @avocado.command(name='slice')
+    @commands.guild_only()
     async def avocado_slice(self, ctx, number: int):
         """Slice the Avocados"""
         try:  players, game = await self.get_avocado_game(ctx)
@@ -210,6 +214,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
             return
 
     @avocado.command(name='mash')
+    @commands.guild_only()
     async def avocado_mash(self, ctx):
         """Mash the Avocados"""
         try: players, game = await self.get_avocado_game(ctx)
@@ -225,6 +230,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
                        f'there are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
 
     @avocado.command(name='eat')
+    @commands.guild_only()
     async def avocado_eat(self, ctx, times: int = 1):
         """Eat some Avocados"""
         try: players, game = await self.get_avocado_game(ctx)
@@ -246,6 +252,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         await ctx.send(f'There are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
 
     @avocado.command(name='buy')
+    @commands.guild_only()
     async def avocado_buy(self, ctx):
         """Buy some Avocados"""
         try: players, game = await self.get_avocado_game(ctx)
@@ -261,6 +268,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
                        f'there are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
 
     @avocado.command(name='skip')
+    @commands.guild_only()
     async def avocado_skip(self, ctx):
         """End your turn"""
         try: players, game = await self.get_avocado_game(ctx)
@@ -273,6 +281,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
                        f'there are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
 
     @avocado.command(name='cancel')
+    @commands.guild_only()
     async def avocado_cancel(self, ctx):
         """Cancel a game of Multiplayer Avocado"""
         try:
@@ -286,6 +295,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
             await ctx.send('Game cancelled.')
 
     @avocado.command(name='previous')
+    @commands.guild_only()
     async def avocado_previous(self, ctx):
         """Check previous Avocado counts"""
         try: players, game = await self.get_avocado_game(ctx, False)
