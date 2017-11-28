@@ -152,6 +152,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     async def avocado_join(self, ctx, *, number: avocados):
         """Start a game of Multiplayer Avocado"""
         if number < 0: return await ctx.send('No negative avocados please.')
+        number %= 2**64
         boards = self.bot.avocados[ctx.guild.id]
         for players in boards.keys():
             if ctx.author.id in players:
@@ -209,9 +210,9 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         except ValueError:
             return await ctx.send('You can\'t slice like that!')
 
-        winner = game.check_win()
+        winner, turn = game.check_win()
         if winner >= 0:
-            await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
+            await ctx.send(f'{game.avocados} was reached on turn {turn}! <@{players[winner]}> wins!')
             del self.bot.avocados[ctx.guild.id][players]
             return
 
@@ -222,9 +223,9 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         try: players, game = await self.get_avocado_game(ctx)
         except ValueError: return
         game.mash()
-        winner = game.check_win()
+        winner, turn = game.check_win()
         if winner >= 0:
-            await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
+            await ctx.send(f'{game.avocados} was reached on turn {turn}! <@{players[winner]}> wins!')
             del self.bot.avocados[ctx.guild.id][players]
             return
 
@@ -237,19 +238,14 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         """Eat some Avocados"""
         try: players, game = await self.get_avocado_game(ctx)
         except ValueError: return
-        for i in range(times):
-            try: game.eat()
-            except ValueError:
-                await ctx.send(
-                    f'Ate {i} time{"s" if i != 1 else ""} before not having enough avocados. ' +
-                    f'There are {game.avocados} avocados {"s" if game.avocados != 1 else ""}')
-                return
-
-            winner = game.check_win()
-            if winner >= 0:
-                await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
-                del self.bot.avocados[ctx.guild.id][players]
-                return
+        try: ate = game.eat(times)
+        except ValueError as e:
+            await ctx.send(f'{e.args[0]} has been hit before! (and maybe some others too.). ' +
+                           f'<@{players[game.turn-1]}> wins!')
+            del self.bot.avocados[ctx.guild.id][players]
+            return
+        else:
+            await ctx.send(f'Ate {ate} time{"s" if ate != 1 else ""}')
 
         await ctx.send(f'There are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
 
@@ -260,9 +256,9 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         try: players, game = await self.get_avocado_game(ctx)
         except ValueError: return
         game.buy()
-        winner = game.check_win()
+        winner, turn = game.check_win()
         if winner >= 0:
-            await ctx.send(f'{game.avocados} has been reached before! <@{players[winner]}> wins!')
+            await ctx.send(f'{game.avocados} was reached on turn {turn}! <@{players[winner]}> wins!')
             del self.bot.avocados[ctx.guild.id][players]
             return
 
@@ -302,13 +298,29 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         """Check previous Avocado counts"""
         try: players, game = await self.get_avocado_game(ctx, False)
         except ValueError: return
-        to_send = str(game.previous)
+        to_send = []
+        for x in game.previous:
+            if isinstance(x, int):
+                to_send.append(str(x))
+            else:
+                to_send.append(f'{x[1]} eats before {x[0]}')
+
+        to_send = ', '.join(to_send)
+
         if len(to_send) < 2000:
             await ctx.send(to_send)
         else:
             open('previous.txt', 'w').write(to_send)
             to_send = discord.File(open('previous.txt', 'rb'))
             await ctx.send(file=to_send)
+
+    @avocado.command(name='spoon')
+    @commands.guild_only()
+    async def avocado_spoon(self, ctx):
+        """See the spoon size"""
+        try: players, game = await self.get_avocado_game(ctx, False)
+        except ValueError: return
+        await ctx.send(f'Spoon size is {game.spoon}')
 
     @avocado_join.before_invoke
     async def check_avocado(self, ctx):

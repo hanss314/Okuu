@@ -9,8 +9,13 @@ class MultiplayerAvocado:
 
     def check_win(self):
         if self.avocados in self.previous[:-1]:
-            return self.turn
+            return self.turn, self.previous.index(self.turn)
         else:
+            for n, pair in enumerate(self.previous[:-1]):
+                if (isinstance(pair, tuple) and pair[0] % self.spoon == self.avocados % self.spoon and
+                  pair[0] <= self.avocados <= pair[0] + self.spoon * pair[1]):
+                    return self.turn, n
+
             return -1
 
     def switch_turn(self):
@@ -38,12 +43,25 @@ class MultiplayerAvocado:
         self.move_made = True
         self.switch_turn()
 
-    def eat(self):
-        if self.avocados < self.spoon:
-            raise ValueError
-        self.move_made = True
-        self.avocados -= self.spoon
-        self.previous.append(self.avocados)
+    def eat(self, amount):
+        amount = min(amount, self.avocados // self.spoon)
+        if amount > 0:
+            self.avocados = self.avocados - amount * self.spoon
+            self.move_made = True
+            for n, hit in enumerate(self.previous[:-1]):
+                if isinstance(hit, int):
+                    if (self.avocados <= hit <= self.avocados + amount * self.spoon and
+                    (hit-self.avocados) % self.spoon == 0):
+                        raise ValueError(hit, n)
+                elif isinstance(hit, tuple):
+                    if self.avocados % self.spoon == hit[0] % self.spoon:
+                        if hit[0] <= self.avocados <= hit[0] + self.spoon * hit[1]:
+                            raise ValueError(self.avocados, n)
+                        elif self.avocados <= hit[0] <= self.avocados + self.spoon * amount:
+                            raise ValueError(hit[0], n)
+
+            self.previous.append((self.avocados, amount))
+        return amount
 
     def buy(self):
         self.avocados += self.spoon
