@@ -149,6 +149,12 @@ class Fun:
 
         await ctx.send(d)
 
+    @numberwang.before_invoke
+    @numberwang_leaderboard.before_invoke
+    async def check_guild_lb(self, ctx):
+        if ctx.guild.id not in self.leaderboard:
+            self.leaderboard[ctx.guild.id] = {}
+
     @commands.command(aliases=['ping'])
     async def birb(self, ctx):
         await ctx.send('Tis a birb. A dangerous birb. An incredibly dangerous birb. Birb.')
