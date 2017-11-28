@@ -1,3 +1,5 @@
+import discord
+
 from .UTTT.board import UTTT_Board
 from .UTTT.avocado import MultiplayerAvocado
 from discord.ext import commands
@@ -300,7 +302,13 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
         """Check previous Avocado counts"""
         try: players, game = await self.get_avocado_game(ctx, False)
         except ValueError: return
-        await ctx.send(str(game.previous))
+        to_send = str(game.previous)
+        if len(to_send) < 2000:
+            await ctx.send(to_send)
+        else:
+            open('previous.txt', 'w').write(to_send)
+            to_send = discord.File(open('previous.txt', 'rb'))
+            await ctx.send(file=to_send)
 
     @avocado_join.before_invoke
     async def check_avocado(self, ctx):
