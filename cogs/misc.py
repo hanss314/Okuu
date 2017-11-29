@@ -1,5 +1,7 @@
 import discord
 import datetime
+import time
+import urllib
 
 from discord.ext import commands
 
@@ -89,6 +91,23 @@ class Misc:
             '*Invite me to your server:* '+
             f'<https://discordapp.com/oauth2/authorize?client_id={ctx.bot.user.id}&scope=bot>'
         )
+
+    @commands.command(aliases=['latency'])
+    async def ping(self, ctx):
+        '''View websocket and message send latency.'''
+
+        rtt_before = time.monotonic()
+        message = await ctx.send('Ping...')
+        rtt_after = time.monotonic()
+        rtt_latency = round((rtt_after - rtt_before) * 1000)
+
+        await message.edit(f'WS: **{ctx.bot.latency} ms**\nRTT: **{rtt_latency} ms**')
+
+    @commands.command(aliases=['g'])
+    async def google(self, ctx, *, query: str):
+        '''Google for a query'''
+        op = urllib.parse.urlencode({'q': query})
+        await ctx.send(f'https://google.com/search?{op}&safe=active')
 
     @commands.command()
     async def help(self, ctx, *args):
