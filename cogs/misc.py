@@ -87,6 +87,7 @@ class Misc:
 
     @commands.command()
     async def invite(self, ctx):
+        """Invite me to your server!"""
         await ctx.send(
             '*Invite me to your server:* '+
             f'<https://discordapp.com/oauth2/authorize?client_id={ctx.bot.user.id}&scope=bot>'
@@ -109,7 +110,7 @@ class Misc:
         op = urllib.parse.urlencode({'q': query})
         await ctx.send(f'https://google.com/search?{op}&safe=active')
 
-    @commands.command()
+    @commands.command(aliases=['tatsukete_eirin', 'eirin'])
     async def help(self, ctx, *args):
         """This help message"""
         if len(args) == 0:
