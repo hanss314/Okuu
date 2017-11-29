@@ -303,7 +303,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
             if isinstance(x, int):
                 to_send.append(str(x))
             else:
-                to_send.append(f'{x[1]} eats before {x[0]}')
+                to_send.append(f'{x[1]} eats, {x[0]}')
 
         to_send = ', '.join(to_send)
 
