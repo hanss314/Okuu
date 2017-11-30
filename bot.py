@@ -32,7 +32,8 @@ class CodeNamesBot(commands.Bot):
 
 
     async def on_message(self, message):
-        await self.process_commands(message)
+        if not message.author.bot:
+            await self.process_commands(message)
 
     async def on_command_error(self, ctx: commands.Context, exception: Exception):
         if isinstance(exception, commands.CommandInvokeError):

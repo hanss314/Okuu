@@ -102,7 +102,7 @@ class Misc:
         rtt_after = time.monotonic()
         rtt_latency = round((rtt_after - rtt_before) * 1000)
 
-        await message.edit(f'WS: **{ctx.bot.latency} ms**\nRTT: **{rtt_latency} ms**')
+        await message.edit(content=f'WS: **{ctx.bot.latency} ms**\nRTT: **{rtt_latency} ms**')
 
     @commands.command(aliases=['g'])
     async def google(self, ctx, *, query: str):
