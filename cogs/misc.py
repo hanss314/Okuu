@@ -93,7 +93,7 @@ class Misc:
             f'<https://discordapp.com/oauth2/authorize?client_id={ctx.bot.user.id}&scope=bot>'
         )
 
-    @commands.command()
+    @commands.command(aliases=['ping'])
     async def latency(self, ctx):
         '''View websocket and message send latency.'''
 

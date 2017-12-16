@@ -155,7 +155,7 @@ class Fun:
         if ctx.guild.id not in self.leaderboard:
             self.leaderboard[ctx.guild.id] = {}
 
-    @commands.command(aliases=['ping'])
+    @commands.command()
     async def birb(self, ctx):
         await ctx.send('Tis a birb. A dangerous birb. An incredibly dangerous birb. Birb.')
 
