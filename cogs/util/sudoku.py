@@ -79,6 +79,7 @@ class Sudoku:
 
 def solve(board):
     stuff_left = True
+    if len(board.empty()) > 81-17: return None
     while stuff_left:
         stuff_left = False
         for x in range(9):

@@ -1,3 +1,5 @@
+import asyncio
+
 from string import ascii_letters
 from .util import sudoku, comp_parser
 from discord.ext import commands
@@ -30,12 +32,21 @@ class Utils:
             row, args = args[:9], args[9:]
             rows.append([to_int(c) for c in row])
 
-        while len(rows[-1]) < 9:
-            rows[-1].append(0)
+        if len(rows[-1]) < 9 or len(rows) < 9:
+            return await ctx.send('Please fill in everything')
+        loop = asyncio.get_event_loop()
+        puzzle = sudoku.Sudoku(rows)
+        for x in range(9):
+            for y in range(9):
+                v = puzzle.get(x, y)
+                if v is not None and v not in puzzle.possible(x, y):
+                    return await ctx.send('Unsolvable sudoku.')
 
-        while len(rows) < 9:
-            rows.append([0] * 9)
-        solved = sudoku.solve(sudoku.Sudoku(rows))
+        try:
+            solved = await asyncio.wait_for(loop.run_in_executor(None, sudoku.solve, puzzle), 1)
+        except asyncio.TimeoutError:
+            return await ctx.send('Are you sure you entered a proper sudoku?')
+
         if solved is not None:
             await ctx.send(f'```{str(solved)}```')
         else:
