@@ -46,10 +46,13 @@ class Voting:
         return acc
 
     @commands.command()
-    async def vote(self, ctx, *response: one_of_them):
+    async def vote(self, ctx, response: one_of_them=None):
+        """
+        Use `vote` to get a voting slide
+        Pick a slide with `vote a` or `vote b`
+        """
         create_new = False
         if ctx.author.id in self.votes['slides'] and response:
-            response = response[0]
             try:
                 votes = self.votes['votes'][ctx.author.id]
             except KeyError:
