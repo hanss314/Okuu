@@ -182,6 +182,7 @@ class Voting:
             'count': 0
         } for path in listdir(RESP_DIR) if isfile(join(RESP_DIR, path))}
         for votes in self.votes['votes'].values():
+            if len(votes) == 0: continue
             power = 1/len(votes)
             for vote in votes:
                 responses[vote[0]]['votes'].append(power)
@@ -201,8 +202,11 @@ class Voting:
                 symbol = SUPERSCRIPT[n % 10]
 
             dead = n < len(responses) * PERCENTAGE
+            try:
+                content = open(response['response'], 'r').read()
+            except UnicodeDecodeError:
+                content = open(response['response'], 'rb').read()
 
-            content = open(response['response'], 'r').read()
             lang = response['response'].split(".")[-1]
             file = None
             if len(content) > 1800:
