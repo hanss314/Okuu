@@ -51,6 +51,10 @@ class Voting:
         Use `vote` to get a voting slide
         Pick a slide with `vote a` or `vote b`
         """
+        if not isinstance(ctx.channel, discord.abc.PrivateChannel):
+            try: await ctx.message.delete()
+            except discord.Forbidden: pass
+            return await ctx.send('Please only vote in DMs.')
         create_new = False
         if ctx.author.id in self.votes['slides'] and response:
             try:
