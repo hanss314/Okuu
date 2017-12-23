@@ -19,6 +19,7 @@ def one_of_them(arg):
     else:
         return arg[0].lower()
 
+
 class Voting:
 
     def __init__(self, bot):
@@ -26,7 +27,8 @@ class Voting:
         with open('votes.yml', 'r') as votes:
             self.votes = yaml.load(votes)
 
-    async def __local_check(self, ctx):
+    @staticmethod
+    async def __local_check(ctx):
         guild = ctx.bot.get_guild(297811083308171264)
         return guild.get_member(ctx.author.id) is not None
 
@@ -34,10 +36,12 @@ class Voting:
         acc = 0
         for vote in self.votes['votes'].values():
             for pair in vote:
-                if filename in pair: acc += 1
+                if filename in pair:
+                    acc += 1
 
         for pair in self.votes['slides'].values():
-            if filename in pair: acc += 0.5
+            if filename in pair:
+                acc += 0.5
 
         return acc
 
@@ -70,43 +74,106 @@ class Voting:
                     responses.append((self.get_count(file), file))
 
             responses.sort()
-            slide = random.sample(responses, 2)
-            self.votes['slides'][ctx.author.id] = tuple([v[1] for v in slide])
+            fewest = [x for x in responses if x[0] == responses[0][0]]
+            rest = [x for x in responses if x not in fewest]
+            random.shuffle(fewest)
+
+            def voted_before(a, b):
+                try:
+                    for vote in self.votes['votes'][ctx.author.id]:
+                        if a in vote and b in vote:
+                            return True
+                    else:
+                        return False
+                except KeyError:
+                    self.votes['votes'][ctx.author.id] = []
+                    return False
+
+            slide = None
+            for x in fewest:
+                for y in fewest:
+                    if x != y and not voted_before(x, y):
+                        slide = (x[1], y[1])
+                        break
+                else:
+                    continue
+                break
+
+            if slide is None:
+                for x in fewest+rest:
+                    for y in fewest+rest:
+                        if x != y and not voted_before(x, y):
+                            slide = (x[1], y[1])
+                            break
+                    else:
+                        continue
+                    break
+
+            if slide is None:
+                slide = tuple([v[1] for v in random.sample(responses, 2)])
+
+            self.votes['slides'][ctx.author.id] = slide
+
+        def count_lines(lines):
+            try:
+                lines = lines.split('\n')
+            except TypeError:
+                return 1
+            count = len(lines)
+            for x in reversed(lines):
+                if x == '':
+                    count -= 1
+                else:
+                    return count
 
         slide = self.votes['slides'][ctx.author.id]
-        content = open(slide[0], 'r').read()
+        try:
+            content = open(slide[0], 'r').read()
+        except UnicodeDecodeError:
+            content = open(slide[0], 'rb').read()
         lang = slide[0].split(".")[-1]
+        d = 'Pick the better one:\n'
+        d += ':regional_indicator_a: '
+        if slide in self.votes['broke']:
+            d += '**Not working** '
+        d += f'{count_lines(content)} line(s)'
         if len(content) < 1900:
-            d = 'Pick the better one:\n'
-            d += ':regional_indicator_a:' + f'```{lang}\n{content}```\n'
+            d += f'```{lang}\n{content}```\n'
             await ctx.send(d)
         else:
             await ctx.send(
-                content='Pick the better one:\n:regional_indicator_a: *Too much content, see attached file*',
+                content=f'{d} *Too much content, see attached file*',
                 file=discord.File(open(slide[0], 'rb'), filename=f'a.{lang}')
             )
 
-        content = open(slide[1], 'r').read()
+        try:
+            content = open(slide[1], 'r').read()
+        except UnicodeDecodeError:
+            content = open(slide[1], 'rb').read()
         lang = slide[1].split(".")[-1]
+        d = ':regional_indicator_b: '
+        if slide in self.votes['broke']:
+            d += '**Not working** '
+        d += f'{count_lines(content)} line(s)'
         if len(content) < 1900:
-            d = ':regional_indicator_b:' + f'```{lang}\n{content}```\n'
+            d += f'```{lang}\n{content}```\n'
             await ctx.send(d)
         else:
             await ctx.send(
-                content=':regional_indicator_b: *Too much content, see attached file*',
-                file=discord.File(open(slide[0], 'rb'), filename=f'b.{lang}')
+                content=f'{d} *Too much content, see attached file*',
+                file=discord.File(open(slide[1], 'rb'), filename=f'b.{lang}')
             )
 
     @vote.after_invoke
-    async def save(self, ctx):
+    async def save(self, _):
         with open('votes.yml', 'w') as votes:
             yaml.dump(self.votes, votes)
 
     @commands.command()
     @commands.is_owner()
     async def results(self, ctx):
-        def get_percentage(entry):
-            return 100 * sum(entry['votes']) / entry['count']
+        def get_percentage(response):
+            return 100 * sum(response['votes']) / response['count']
 
         responses = {join(RESP_DIR, path): {
             'votes': [],
