@@ -27,11 +27,6 @@ class Voting:
         with open('votes.yml', 'r') as votes:
             self.votes = yaml.load(votes)
 
-    @staticmethod
-    async def __local_check(ctx):
-        guild = ctx.bot.get_guild(297811083308171264)
-        return guild.get_member(ctx.author.id) is not None
-
     def get_count(self, filename):
         acc = 0
         for vote in self.votes['votes'].values():
