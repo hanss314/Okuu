@@ -83,7 +83,7 @@ class Voting:
             def voted_before(a, b):
                 try:
                     for vote in self.votes['votes'][ctx.author.id]:
-                        if a in vote and b in vote:
+                        if a[1] in vote and b[1] in vote:
                             return True
                     else:
                         return False
@@ -112,7 +112,7 @@ class Voting:
                     break
 
             if slide is None:
-                slide = tuple([v[1] for v in random.sample(responses, 2)])
+                return await ctx.send('You\'ve voted on everything, please stop voting.')
 
             self.votes['slides'][ctx.author.id] = slide
 
@@ -143,6 +143,7 @@ class Voting:
             d += f'```{lang}\n{content}```\n'
             await ctx.send(d)
         else:
+            d += f'```{lang}\n{content[:1900]}```\n'
             await ctx.send(
                 content=f'{d} *Too much content, see attached file*',
                 file=discord.File(open(slide[0], 'rb'), filename=f'a.{lang}')
@@ -161,6 +162,7 @@ class Voting:
             d += f'```{lang}\n{content}```\n'
             await ctx.send(d)
         else:
+            d += f'```{lang}\n{content[:1900]}```\n'
             await ctx.send(
                 content=f'{d} *Too much content, see attached file*',
                 file=discord.File(open(slide[1], 'rb'), filename=f'b.{lang}')
@@ -211,6 +213,7 @@ class Voting:
             file = None
             if len(content) > 1800:
                 content = '*Too much content, see attached file*'
+                content += f'```{lang}\n{content[:1800]}```\n'
                 file = discord.File(open(response['response'], 'r'), filename=f'response.{lang}')
             else:
                 content = f'```{lang}\n{content}```\n'
