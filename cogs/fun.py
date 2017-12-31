@@ -25,7 +25,7 @@ def number(arg: str) -> complex:
 
 def factor(x):
     fs = set()
-    for i in range(1, int(math.ceil(math.sqrt(x)))):
+    for i in range(1, min(100000, int(math.ceil(math.sqrt(x))))):
         if x%i == 0:
             fs.add(x//i)
             fs.add(i)
@@ -40,6 +40,9 @@ def p_factor(x):
             x //= i
         else:
             i += 1
+            
+        if i > 100000:
+            break
 
     return factors
 
