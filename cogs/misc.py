@@ -26,7 +26,7 @@ class Misc:
     def format_commands(self, prefix, cmd, name=None):
         cmd_args = self.format_args(cmd)
         if not name: name = cmd.name
-        name = name.replace('  ',' ')
+        name = name.replace('  ', ' ')
         d = f'`{prefix}{name}{cmd_args}`\n'
 
         if type(cmd) == commands.core.Group:
@@ -89,13 +89,13 @@ class Misc:
     async def invite(self, ctx):
         """Invite me to your server!"""
         await ctx.send(
-            '*Invite me to your server:* '+
+            '*Invite me to your server:* ' +
             f'<https://discordapp.com/oauth2/authorize?client_id={ctx.bot.user.id}&scope=bot>'
         )
 
     @commands.command(aliases=['ping'])
     async def latency(self, ctx):
-        '''View websocket and message send latency.'''
+        """View websocket and message send latency."""
 
         rtt_before = time.monotonic()
         message = await ctx.send('Ping...')
@@ -106,9 +106,18 @@ class Misc:
 
     @commands.command(aliases=['g'])
     async def google(self, ctx, *, query: str):
-        '''Google for a query'''
+        """Google for a query"""
         op = urllib.parse.urlencode({'q': query})
         await ctx.send(f'https://google.com/search?{op}&safe=active')
+
+    @commands.command()
+    async def about(self, ctx):
+        """About the bot"""
+        d = 'This bot was made by *hanss314#0128*\n' \
+            'Source code can be found at <https://github.com/hanss314>\n' \
+            f'Use {ctx.prefix}help for help'
+
+        await ctx.send(d)
 
     @commands.command(aliases=['tatsukete_eirin', 'eirin'])
     async def help(self, ctx, *args):
