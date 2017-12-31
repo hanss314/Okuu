@@ -114,7 +114,7 @@ class Misc:
     async def about(self, ctx):
         """About the bot"""
         d = 'This bot was made by *hanss314#0128*\n' \
-            'Source code can be found at <https://github.com/hanss314>\n' \
+            'Source code can be found at <https://github.com/hanss314/Okuu>\n' \
             f'Use {ctx.prefix}help for help'
 
         await ctx.send(d)
