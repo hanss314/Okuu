@@ -48,17 +48,20 @@ rpncalc = {
     'clr': lambda l: [],
 }
 
+
 def std_complex(string) -> complex:
     try:
         return complex(string)
     except ValueError:
         return complex(string.replace('i', 'j'))
 
+
 conv_list = [
     int,
     float,
     std_complex,
 ]
+
 
 def convert(string):
     for func in conv_list:
@@ -82,16 +85,16 @@ class Utils:
         """Use an RPN calculator"""
         stack = self.stacks[ctx.author.id]
         loop = asyncio.get_event_loop()
-        for op in ops:
+        for n, op in enumerate(ops):
             if op in rpncalc:
                 try:
                     stack = await asyncio.wait_for(
                         loop.run_in_executor(None, rpncalc[op], stack), 1
                     )
                 except asyncio.TimeoutError:
-                    return await ctx.send('Operation timed out. Aborting.')
+                    return await ctx.send(f'Operation {n+1}: `{op}` timed out. Aborting.')
                 except IndexError:
-                    return await ctx.send('Stack size too small. Aborting')
+                    return await ctx.send(f'Stack size too small on operation {n+1}: `{op}`. Aborting')
                 except Exception as e:
                     return await ctx.send(f'{e} Aborting.')
 
@@ -99,7 +102,7 @@ class Utils:
                 try:
                     stack = [convert(op)] + stack
                 except ValueError:
-                    return await ctx.send('Invalid value or operation. Aborting')
+                    return await ctx.send(f'Invalid value or operation: `{op}`. Aborting')
 
         self.stacks[ctx.author.id] = stack[:16]
         await ctx.invoke(self.show_stack)
