@@ -45,6 +45,7 @@ rpncalc = {
     # stack operations
     'swp': lambda l: [l[1], l[0]] + l[2:],
     'drp': lambda l: l[1:],
+    'dup': lambda l: [l[0]] + l,
     'clr': lambda l: [],
 }
 
