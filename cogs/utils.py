@@ -106,6 +106,7 @@ class Utils:
 
     @rpn.command(name='help')
     async def rpn_help(self, ctx):
+        """Get a list of all operations"""
         await ctx.send(f'Available operations: {", ".join(x for x in rpncalc.keys())}')
 
     @rpn.command(name='stack')
