@@ -20,6 +20,7 @@ rpncalc = {
     '/': lambda l: [l[1]/l[0]] + l[2:],
     '^': lambda l: [l[1]**l[0]] + l[2:],
     '**': lambda l: [l[1]**l[0]] + l[2:],
+    'sqrt': lambda l: [l[0]**0.5] + l[2:],
 
     # trig
     'sin': lambda l: [math.sin(l[0])] + l[1:],
@@ -97,7 +98,7 @@ class Utils:
                 except IndexError:
                     return await ctx.send(f'Stack size too small on operation {n+1}: `{op}`. Aborting')
                 except Exception as e:
-                    return await ctx.send(f'{e} Aborting.')
+                    return await ctx.send(f'{e}, aborting.')
 
             else:
                 try:
