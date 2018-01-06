@@ -119,7 +119,7 @@ class Utils:
         if len(self.stacks[ctx.author.id]) == 0:
             return await ctx.send('Your stack is empty.')
 
-        await ctx.send(', '.join(str(x) for x in self.stacks[ctx.author.id]))
+        await ctx.send(', '.join(str(x) for x in self.stacks[ctx.author.id]).replace('j', 'i'))
 
     @rpn.before_invoke
     @show_stack.before_invoke
