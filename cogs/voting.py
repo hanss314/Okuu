@@ -143,7 +143,7 @@ class Voting:
             d += f'```{lang}\n{content}```\n'
             await ctx.send(d)
         else:
-            d += f'```{lang}\n{content[:1900]}```\n'
+            d += f'```{lang}\n{content[:1850]}```\n'
             await ctx.send(
                 content=f'{d} *Too much content, see attached file*',
                 file=discord.File(open(slide[0], 'rb'), filename=f'a.{lang}')
@@ -162,7 +162,7 @@ class Voting:
             d += f'```{lang}\n{content}```\n'
             await ctx.send(d)
         else:
-            d += f'```{lang}\n{content[:1900]}```\n'
+            d += f'```{lang}\n{content[:1850]}```\n'
             await ctx.send(
                 content=f'{d} *Too much content, see attached file*',
                 file=discord.File(open(slide[1], 'rb'), filename=f'b.{lang}')
