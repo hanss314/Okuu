@@ -59,7 +59,7 @@ class Voting:
 
             v = self.votes['slides'][ctx.author.id]
             if response == 'a':
-                votes.append(v)
+                votes.append((v[0], v[1]))
             else:
                 votes.append((v[1], v[0]))
 
@@ -226,6 +226,8 @@ class Voting:
                 round(response['percentage'], 2)
             )
             await ctx.send(msg, file=file)
+            with open('results.txt', 'a+') as results_file:
+                results_file.write(msg+'\n\n\n')
 
 
 def setup(bot):
