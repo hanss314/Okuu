@@ -4,3 +4,6 @@ __pycache__/
 .idea/
 lastwang
 wangs.yml
+results.txt
+votes.yml
+cogs/responses/
