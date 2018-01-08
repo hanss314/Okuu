@@ -1,5 +1,6 @@
 import random
 import discord
+import math
 
 from os import listdir
 from os.path import isfile, join
@@ -185,7 +186,7 @@ class Voting:
         } for path in listdir(RESP_DIR) if isfile(join(RESP_DIR, path))}
         for votes in self.votes['votes'].values():
             if len(votes) == 0: continue
-            power = 1/len(votes)
+            power = 1/math.sqrt(len(responses)*len(votes))
             for vote in votes:
                 responses[vote[0]]['votes'].append(power)
                 responses[vote[1]]['votes'].append(0)
