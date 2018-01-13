@@ -83,7 +83,7 @@ class Fun:
 
         delta = time.time() - start
         words = len(re.sub('<[^>]+>', '', m.content))
-        if delta < 0.3: return
+        if words/delta > 10: return
 
         try:
             self.typing[user.id][0] += words
