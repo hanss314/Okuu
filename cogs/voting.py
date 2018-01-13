@@ -47,6 +47,9 @@ class Voting:
         Use `vote` to get a voting slide
         Pick a slide with `vote a` or `vote b`
         """
+        if ctx.author.id in self.votes['slides'] and self.votes['slides'][ctx.author.id] == -1:
+            return await ctx.send('You\'ve voted on everything, please stop voting.')
+
         if not isinstance(ctx.channel, discord.abc.PrivateChannel):
             try: await ctx.message.delete()
             except discord.Forbidden: pass
@@ -113,6 +116,7 @@ class Voting:
                     break
 
             if slide is None:
+                self.votes['slides'][ctx.author.id] = -1
                 return await ctx.send('You\'ve voted on everything, please stop voting.')
 
             self.votes['slides'][ctx.author.id] = slide
