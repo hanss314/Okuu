@@ -3,6 +3,7 @@ import math
 import random
 import time
 import asyncio
+import re
 
 from string import ascii_lowercase
 from ruamel import yaml
@@ -69,6 +70,7 @@ class Fun:
             self.typing = {}
 
     async def on_typing(self, channel, user, when):
+        if user.bot: return
         start = time.time()
 
         def check(m):
@@ -80,7 +82,8 @@ class Fun:
             return
 
         delta = time.time() - start
-        words = len(m.content)
+        words = len(re.sub('<[^>]+>', '', m.content))
+        if delta < 0.3: return
 
         try:
             self.typing[user.id][0] += words
