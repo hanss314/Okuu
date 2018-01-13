@@ -134,7 +134,7 @@ class Fun:
         speeds = sorted([
             (12*pair[0]/pair[1], user)
             for user, pair in self.typing.items()
-        ])
+        ], reverse=True)
         total = math.ceil(len(speeds) / 10)
         speeds = speeds[page*10:page*10 + 10]
         lst = '\n'.join(
