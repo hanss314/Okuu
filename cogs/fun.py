@@ -1,6 +1,8 @@
 import hashlib
 import math
 import random
+import time
+import asyncio
 
 from string import ascii_lowercase
 from ruamel import yaml
@@ -58,8 +60,36 @@ class Fun:
             wangs = {'lastwang': self.hash(1), 'leaderboard': {}}
             yaml.dump(wangs, open('./wangs.yml', 'w'))
 
+
         self.lastwang = wangs['lastwang']
         self.leaderboard = wangs['leaderboard']
+        if 'typing' in wangs:
+            self.typing = wangs['typing']
+        else:
+            self.typing = {}
+
+    async def on_typing(self, channel, user, when):
+        start = time.time()
+
+        def check(m):
+            return m.author == user and m.channel == channel
+
+        try:
+            m = await self.bot.wait_for('message', check=check, timeout=60)
+        except asyncio.TimeoutError:
+            return
+
+        delta = time.time() - start
+        words = len(m.content)
+
+        try:
+            self.typing[user.id][0] += words
+            self.typing[user.id][1] += delta
+        except KeyError:
+            self.typing[user.id] = [words, delta]
+
+        self.write_wangfile()
+
 
     @staticmethod
     def hash(object):
@@ -72,7 +102,11 @@ class Fun:
 
     def write_wangfile(self):
         yaml.dump(
-            {'lastwang': self.lastwang, 'leaderboard': self.leaderboard},
+            {
+                'lastwang': self.lastwang,
+                'leaderboard': self.leaderboard,
+                'typing': self.typing
+            },
             open('./wangs.yml', 'w')
         )
 
@@ -89,6 +123,26 @@ class Fun:
         lw, rstr = int(str(lw)[-int(str(rstr)[0]) // 2 - 5:]), int(str(rstr)[-int(str(lw)[0]) // 2 - 5:])
         final =  p_factor(lw) & p_factor(rstr)
         return len(final) > 0, len(final) > 1
+
+    @commands.command(aliases=['mywpm'])
+    async def myspeed(self, ctx):
+        wpm = 12 * self.typing[ctx.author.id][0] / self.typing[ctx.author.id][1]
+        await ctx.send(f'You are averaging {wpm:.2f} wpm.')
+
+    @commands.command(aliases=['speedlb', 'typing'])
+    async def typingspeed(self, ctx, page: int=0):
+        speeds = sorted([
+            (12*pair[0]/pair[1], user)
+            for user, pair in self.typing.items()
+        ])
+        total = math.ceil(len(speeds) / 10)
+        speeds = speeds[page*10:page*10 + 10]
+        lst = '\n'.join(
+            f'{n+page*10}. **{self.bot.get_user(pair[1]) or pair[1]}**: {pair[0]:.2f} wpm'
+            for n, pair in enumerate(speeds)
+        )
+        await ctx.send(f'Fastest typers, page {page+1}/{total}\n{lst}')
+
 
     @commands.group(invoke_without_command=True)
     @commands.cooldown(1, 10, commands.BucketType.user)
