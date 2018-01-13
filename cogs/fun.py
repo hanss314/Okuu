@@ -96,7 +96,7 @@ class Fun:
         return hashlib.sha512(bytes(repr(object), 'utf8')).hexdigest()
 
     @staticmethod
-    def int(string: str) -> int:
+    def to_int(string: str) -> int:
         try: return int(string)
         except ValueError: return 1
 
@@ -114,12 +114,12 @@ class Fun:
         r = num
         i = num.__dir__
         rstr = ''.join(c for c in self.hash(r) if c in ascii_lowercase)
-        istr = self.int(''.join(c for c in self.hash(i) if c in ascii_digit))
-        rstr = self.int(''.join(c for c in self.hash(rstr) if c in ascii_digit))
-        lw = self.int(''.join(c for c in self.lastwang if c in ascii_digit))
+        istr = self.to_int(''.join(c for c in self.hash(i) if c in ascii_digit))
+        rstr = self.to_int(''.join(c for c in self.hash(rstr) if c in ascii_digit))
+        lw = self.to_int(''.join(c for c in self.lastwang if c in ascii_digit))
 
         lw, istr = int(str(lw)[-int(str(istr)[0])//2-5:]), int(str(istr)[-int(str(lw)[0])//2-5:])
-        lw = self.int(''.join(c for c in self.hash(factor(lw) ^ factor(istr)) if c in ascii_digit))
+        lw = self.to_int(''.join(c for c in self.hash(factor(lw) ^ factor(istr)) if c in ascii_digit))
         lw, rstr = int(str(lw)[-int(str(rstr)[0]) // 2 - 5:]), int(str(rstr)[-int(str(lw)[0]) // 2 - 5:])
         final =  p_factor(lw) & p_factor(rstr)
         return len(final) > 0, len(final) > 1
@@ -138,7 +138,7 @@ class Fun:
         total = math.ceil(len(speeds) / 10)
         speeds = speeds[page*10:page*10 + 10]
         lst = '\n'.join(
-            f'{n+page*10}. **{self.bot.get_user(pair[1]) or pair[1]}**: {pair[0]:.2f} wpm'
+            f'{n+page*10+1}. **{self.bot.get_user(pair[1]) or pair[1]}**: {pair[0]:.2f} wpm'
             for n, pair in enumerate(speeds)
         )
         await ctx.send(f'Fastest typers, page {page+1}/{total}\n{lst}')
