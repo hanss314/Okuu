@@ -11,7 +11,7 @@ from discord.ext import commands
 
 RESP_DIR = 'cogs/responses'
 SUPERSCRIPT = ['ˢᵗ', 'ᶮᵈ', 'ʳᵈ'] + ['ᵗʰ'] * 7
-PERCENTAGE = 0.8
+PERCENTAGE = 0.85
 
 
 def one_of_them(arg):
@@ -190,7 +190,7 @@ class Voting:
         } for path in listdir(RESP_DIR) if isfile(join(RESP_DIR, path))}
         for votes in self.votes['votes'].values():
             if len(votes) == 0: continue
-            power = 1/math.sqrt(len(responses)*len(votes))
+            power = 1/len(votes)
             for vote in votes:
                 responses[vote[0]]['votes'].append(power)
                 responses[vote[1]]['votes'].append(0)
@@ -208,7 +208,7 @@ class Voting:
             else:
                 symbol = SUPERSCRIPT[n % 10]
 
-            dead = n < len(responses) * PERCENTAGE
+            dead = n > len(responses) * PERCENTAGE
             try:
                 content = open(response['response'], 'r').read()
             except UnicodeDecodeError:
