@@ -36,7 +36,7 @@ class Voting:
                     acc += 1
 
         for pair in self.votes['slides'].values():
-            if filename in pair:
+            if pair != -1 and filename in pair:
                 acc += 0.5
 
         return acc
