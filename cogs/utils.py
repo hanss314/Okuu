@@ -180,13 +180,18 @@ class Utils:
         Charges are not supported
         """
         try:
-            composition = comp_parser.parse_comp(compound)
+            composition, charge = comp_parser.get_mass(
+                comp_parser.parse_comp(compound)
+            )
         except ValueError:
             return await ctx.send('Are your brackets balanced?')
         except KeyError:
             return await ctx.send('Invalid element')
         else:
-            await ctx.send(f'The molar mass of `{compound}` is {comp_parser.get_mass(composition):.3f}g/mol')
+            await ctx.send(
+                f'The molar mass of `{compound}` is {composition:.3f}g/mol. '
+                f'The charge is {charge:+d}.'
+            )
 
 
 def setup(bot):
