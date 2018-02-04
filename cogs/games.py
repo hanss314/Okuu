@@ -130,10 +130,10 @@ When your are sent to a field that is already decided, you can choose freely.
 <https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/>
         '''
         await ctx.send(d)
-
+"""
     @commands.group(invoke_without_command=True, aliases=['avo', '🎮🥑🎮'])
     async def avocado(self, ctx):
-        """Play a game of Multiplayer Avocado!"""
+        '''Play a game of Multiplayer Avocado!'''
         d = '''Rules for Multiplayer Avocado:
 The first player decides the number of Avocados, using the Avacado emoji
 The second player decides the spoon size which is an integer greater or equal to 0
@@ -150,7 +150,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     @avocado.command(name='join')
     @commands.guild_only()
     async def avocado_join(self, ctx, *, number: avocados):
-        """Start a game of Multiplayer Avocado"""
+        '''Start a game of Multiplayer Avocado'''
         if number < 0: return await ctx.send('No negative avocados please.')
         number %= 2**64
         boards = self.bot.avocados[ctx.guild.id]
@@ -200,7 +200,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     @avocado.command(name='slice')
     @commands.guild_only()
     async def avocado_slice(self, ctx, number: int):
-        """Slice the Avocados"""
+        '''Slice the Avocados'''
         try:  players, game = await self.get_avocado_game(ctx)
         except ValueError: return
         try:
@@ -219,7 +219,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     @avocado.command(name='mash')
     @commands.guild_only()
     async def avocado_mash(self, ctx):
-        """Mash the Avocados"""
+        '''Mash the Avocados'''
         try: players, game = await self.get_avocado_game(ctx)
         except ValueError: return
         game.mash()
@@ -235,7 +235,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     @avocado.command(name='eat')
     @commands.guild_only()
     async def avocado_eat(self, ctx, times: int = 1):
-        """Eat some Avocados"""
+        '''Eat some Avocados'''
         try: players, game = await self.get_avocado_game(ctx)
         except ValueError: return
         try: ate = game.eat(times)
@@ -252,7 +252,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     @avocado.command(name='buy')
     @commands.guild_only()
     async def avocado_buy(self, ctx):
-        """Buy some Avocados"""
+        '''Buy some Avocados'''
         try: players, game = await self.get_avocado_game(ctx)
         except ValueError: return
         game.buy()
@@ -268,7 +268,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     @avocado.command(name='skip')
     @commands.guild_only()
     async def avocado_skip(self, ctx):
-        """End your turn"""
+        '''End your turn'''
         try: players, game = await self.get_avocado_game(ctx)
         except ValueError: return
         try: game.switch_turn()
@@ -281,7 +281,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     @avocado.command(name='cancel')
     @commands.guild_only()
     async def avocado_cancel(self, ctx):
-        """Cancel a game of Multiplayer Avocado"""
+        '''Cancel a game of Multiplayer Avocado'''
         try:
             players, game = await self.get_avocado_game(ctx, False)
         except ValueError:
@@ -295,7 +295,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     @avocado.command(name='previous')
     @commands.guild_only()
     async def avocado_previous(self, ctx):
-        """Check previous Avocado counts"""
+        '''Check previous Avocado counts'''
         try: players, game = await self.get_avocado_game(ctx, False)
         except ValueError: return
         to_send = []
@@ -317,7 +317,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
     @avocado.command(name='spoon')
     @commands.guild_only()
     async def avocado_spoon(self, ctx):
-        """See the spoon size"""
+        '''See the spoon size'''
         try: players, game = await self.get_avocado_game(ctx, False)
         except ValueError: return
         await ctx.send(f'Spoon size is {game.spoon}')
@@ -328,7 +328,7 @@ The number of Avocados must be an integer greater or equal to 0 at all times.'''
             self.bot.avocados = {}
         if ctx.guild.id not in self.bot.avocados:
             self.bot.avocados[ctx.guild.id] = {}
-
+"""
 
 def setup(bot):
     bot.add_cog(Games(bot))
