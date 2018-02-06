@@ -1,8 +1,8 @@
-import discord
-
+from .UTTT import mafia
 from .UTTT.board import UTTT_Board
-from .UTTT.avocado import MultiplayerAvocado
 from discord.ext import commands
+from ruamel import yaml
+
 
 def avocados(arg):
     try: return int(arg)
@@ -14,6 +14,7 @@ class Games:
 
     def __init__(self, bot):
         self.bot = bot
+        self.mafia_games = yaml.safe_load(open('bot_data/mafia.yml', 'r'))
 
     def get_game(self, player, db, emptytype, auto_join=True, constr_args=()):
         game = None
@@ -61,7 +62,9 @@ class Games:
             legal_moves = [x[:2] for x in board.get_legal_moves()]
             if (x, y) in legal_moves:
                 board.next_play = (x, y)
-                await ctx.send(f'{ctx.author.mention}, your move will be made on board {board.next_play} ```\n{board.to_UI()}```')
+                await ctx.send(
+                    f'{ctx.author.mention}, your move will be made on board {board.next_play} ```\n{board.to_UI()}```'
+                )
                 return
             else:
                 await ctx.send(f'{ctx.author.mention} that is not a playable board.')
@@ -91,7 +94,6 @@ class Games:
 
                 await ctx.send(d)
 
-
     @uttt.before_invoke
     async def check_board(self, ctx):
         if not hasattr(self.bot, 'uttt_boards'):
@@ -118,7 +120,6 @@ class Games:
         else:
             await ctx.send(f'{ctx.author.mention} Game cancelled.')
 
-
     @uttt.command(name='help')
     async def uttt_help(self, ctx):
         '''Gives you help on UTTT'''
@@ -130,205 +131,76 @@ When your are sent to a field that is already decided, you can choose freely.
 <https://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/>
         '''
         await ctx.send(d)
-"""
-    @commands.group(invoke_without_command=True, aliases=['avo', '🎮🥑🎮'])
-    async def avocado(self, ctx):
-        '''Play a game of Multiplayer Avocado!'''
-        d = '''Rules for Multiplayer Avocado:
-The first player decides the number of Avocados, using the Avacado emoji
-The second player decides the spoon size which is an integer greater or equal to 0
-Each player takes turn performing actions. The possible actions are:
-1.) "Slice" reduce the number of Avocados to a factor of the current number that is not 1 or the current number
-2.) "Mash" square the number of Avocados
-3.) "Eat" subtract the spoon size from the number of Avocados and take another turn
-4.) "Buy" add the spoon size to the number of Avocados.
-If after any action, the number of Avocados reaches a number that was already reached, the player that performed the action loses.
-The number of Avocados must be an integer greater or equal to 0 at all times.'''
 
-        await ctx.send(d)
+    @commands.group()
+    async def mafia(self, ctx):
+        '''Play a game of mafia'''
+        await ctx.send(f'Use `{ctx.prefix}mafia join` to join a game of mafia on this server!')
 
-    @avocado.command(name='join')
-    @commands.guild_only()
-    async def avocado_join(self, ctx, *, number: avocados):
-        '''Start a game of Multiplayer Avocado'''
-        if number < 0: return await ctx.send('No negative avocados please.')
-        number %= 2**64
-        boards = self.bot.avocados[ctx.guild.id]
-        for players in boards.keys():
-            if ctx.author.id in players:
-                return await ctx.send(f'{ctx.author.mention} You\'re already in a game!')
-
-        game, board = self.get_game(ctx.author.id, boards, MultiplayerAvocado)
-        if len(game) == 1:
-            board.avocados = number
-            board.previous = [number]
-            await ctx.send(f'{ctx.author.mention} Started a game with {number} avocado{"s" if number != 1 else ""}!')
+    @mafia.command(name='join')
+    async def mafia_join(self, ctx):
+        '''
+        Join a game of mafia in this channel
+        Use `mafia start` to vote to start the game
+        '''
+        if ctx.channel.id in self.mafia:
+            game = self.mafia[ctx.channel.id]
         else:
-            if number < 1:
-                await ctx.send('Spoon size must be greater than 0!')
-                boards[(game[0],)] = board
-                del board[game]
-                return
+            game = self.mafia[ctx.author.id] = mafia.new_game(ctx.channel.id)
 
-            board.spoon = number
-            await ctx.send(
-                f'<@{game[0]}> your turn. Spoon size is {number}.' +
-                f'There are {board.avocados} avocado{"s" if board.avocados != 1 else ""}')
+        if ctx.author.id in game['players']:
+            return await ctx.send(
+                'You have already joined! Use `{ctx.prefix}mafia start` to vote to start the game.'
+            )
 
-    async def get_avocado_game(self, ctx, error=True):
-        await self.check_avocado(ctx)
-        if (ctx.author.id,) in self.bot.avocados[ctx.guild.id]:
-            await ctx.send('It\'s not your turn!')
-            raise ValueError
-        try:
-            players, game = self.get_game(
-                    ctx.author.id,
-                    self.bot.avocados[ctx.guild.id],
-                    None, False)
-            if players[game.turn] == ctx.author.id:
-                return players, game
+        game['players'][ctx.author.id] = mafia.new_player()
+        await ctx.send('Joined game! Use `{ctx.prefix}mafia start` to vote to start.')
 
-        except ValueError as e:
-            await ctx.send('You aren\'t in a game!')
-            raise e
+    @mafia.command(name='start')
+    async def mafia_start(self, ctx):
+        '''Vote to start the game'''
+        if ctx.channel.id not in self.mafia or ctx.author.id not in self.mafia[ctx.channel.id]['players']:
+            return await ctx.send('You have not joined the game.')
 
-        if error:
-            await ctx.send('It\'s not your turn!')
-            raise ValueError
-        else: return players, game
+        game = self.mafia[ctx.channel.id]
+        if game['started']:
+            return await ctx.send('Game has already started')
 
-    @avocado.command(name='slice')
-    @commands.guild_only()
-    async def avocado_slice(self, ctx, number: int):
-        '''Slice the Avocados'''
-        try:  players, game = await self.get_avocado_game(ctx)
-        except ValueError: return
-        try:
-            game.slice(number)
-            await ctx.send(f'<@{players[game.turn]}> your turn, ' +
-                           f'there are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
-        except ValueError:
-            return await ctx.send('You can\'t slice like that!')
+        game['players'][ctx.author.id]['can_start'] = True
+        yes = 0
+        no = 0
+        for player in game['players'].values():
+            if player['can_start']: yes += 1
+            else: no += 1
 
-        winner, turn = game.check_win()
-        if winner >= 0:
-            await ctx.send(f'{game.avocados} was reached on turn {turn}! <@{players[winner]}> wins!')
-            del self.bot.avocados[ctx.guild.id][players]
-            return
+        if len(game['players']) < 6:
+            return await ctx.send(f'Decision noted, wait for {6-len(game["players"])} more to join.')
+        elif yes / no < 2:
+            return await ctx.send('Decision noted, wait for more people to start.')
 
-    @avocado.command(name='mash')
-    @commands.guild_only()
-    async def avocado_mash(self, ctx):
-        '''Mash the Avocados'''
-        try: players, game = await self.get_avocado_game(ctx)
-        except ValueError: return
-        game.mash()
-        winner, turn = game.check_win()
-        if winner >= 0:
-            await ctx.send(f'{game.avocados} was reached on turn {turn}! <@{players[winner]}> wins!')
-            del self.bot.avocados[ctx.guild.id][players]
-            return
+        mafia.start(game)
+        mafia_members = ', '.join(self.bot.get_user(member) for member in game['mafia'])
+        for member in game['mafia']:
+            self.bot.get_user(member).send(
+                'You are a member of the mafia. Each night, vote amongst your fellow mafia to kill an innocent. '
+                f'These are the members of the mafia: {mafia_members}.'
+            )
 
-        await ctx.send(f'<@{players[game.turn]}> your turn, ' +
-                       f'there are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
+        self.bot.get_user(game['doctor']).send(
+            'You are the doctor. Each night you can choose one person to save.'
+        )
+        self.bot.get_user(game['detective']).send(
+            'You are the detective. Each night you can see the role of one user.'
+        )
+        for innocent in game['innocents']:
+            self.bot.get_user(innocent).send('You are an innocent. Every day, you vote to lynch someone.')
 
-    @avocado.command(name='eat')
-    @commands.guild_only()
-    async def avocado_eat(self, ctx, times: int = 1):
-        '''Eat some Avocados'''
-        try: players, game = await self.get_avocado_game(ctx)
-        except ValueError: return
-        try: ate = game.eat(times)
-        except ValueError as e:
-            await ctx.send(f'{e.args[0]} has been hit before! (and maybe some others too.). ' +
-                           f'<@{players[game.turn-1]}> wins!')
-            del self.bot.avocados[ctx.guild.id][players]
-            return
-        else:
-            await ctx.send(f'Ate {ate} time{"s" if ate != 1 else ""}')
+    @mafia_join.after_invoke
+    @mafia_start.after_invoke
+    async def save_mafia(self, _):
+        yaml.dump(self.mafia, open('bot_data/mafia.yml', 'w'))
 
-        await ctx.send(f'There are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
 
-    @avocado.command(name='buy')
-    @commands.guild_only()
-    async def avocado_buy(self, ctx):
-        '''Buy some Avocados'''
-        try: players, game = await self.get_avocado_game(ctx)
-        except ValueError: return
-        game.buy()
-        winner, turn = game.check_win()
-        if winner >= 0:
-            await ctx.send(f'{game.avocados} was reached on turn {turn}! <@{players[winner]}> wins!')
-            del self.bot.avocados[ctx.guild.id][players]
-            return
-
-        await ctx.send(f'<@{players[game.turn]}> your turn, ' +
-                       f'there are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
-
-    @avocado.command(name='skip')
-    @commands.guild_only()
-    async def avocado_skip(self, ctx):
-        '''End your turn'''
-        try: players, game = await self.get_avocado_game(ctx)
-        except ValueError: return
-        try: game.switch_turn()
-        except ValueError:
-            await ctx.send('You have to make a move!')
-
-        await ctx.send(f'<@{players[game.turn]}> your turn, ' +
-                       f'there are {game.avocados} avocado{"s" if game.avocados != 1 else ""}')
-
-    @avocado.command(name='cancel')
-    @commands.guild_only()
-    async def avocado_cancel(self, ctx):
-        '''Cancel a game of Multiplayer Avocado'''
-        try:
-            players, game = await self.get_avocado_game(ctx, False)
-        except ValueError:
-            return
-        del self.bot.avocados[ctx.guild.id][players]
-        if len(players) > 1:
-            await ctx.send(f'Cancelled your game with <@{players[players.index(ctx.author.id) - 1]}>')
-        else:
-            await ctx.send('Game cancelled.')
-
-    @avocado.command(name='previous')
-    @commands.guild_only()
-    async def avocado_previous(self, ctx):
-        '''Check previous Avocado counts'''
-        try: players, game = await self.get_avocado_game(ctx, False)
-        except ValueError: return
-        to_send = []
-        for x in game.previous:
-            if isinstance(x, int):
-                to_send.append(str(x))
-            else:
-                to_send.append(f'{x[1]} eats, {x[0]}')
-
-        to_send = ', '.join(to_send)
-
-        if len(to_send) < 2000:
-            await ctx.send(to_send)
-        else:
-            open('previous.txt', 'w').write(to_send)
-            to_send = discord.File(open('previous.txt', 'rb'))
-            await ctx.send(file=to_send)
-
-    @avocado.command(name='spoon')
-    @commands.guild_only()
-    async def avocado_spoon(self, ctx):
-        '''See the spoon size'''
-        try: players, game = await self.get_avocado_game(ctx, False)
-        except ValueError: return
-        await ctx.send(f'Spoon size is {game.spoon}')
-
-    @avocado_join.before_invoke
-    async def check_avocado(self, ctx):
-        if not hasattr(self.bot, 'avocados'):
-            self.bot.avocados = {}
-        if ctx.guild.id not in self.bot.avocados:
-            self.bot.avocados[ctx.guild.id] = {}
-"""
 
 def setup(bot):
     bot.add_cog(Games(bot))
