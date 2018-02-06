@@ -1,5 +1,6 @@
 import asyncio
 import math
+import statistics
 
 from ruamel import yaml
 from string import ascii_letters
@@ -42,6 +43,21 @@ rpncalc = {
     'ln': lambda l: [math.log(l[0])] + l[1:],
     'log': lambda l: [math.log10(l[0])] + l[1:],
     'logb': lambda l: [math.log(l[0], l[1])] + l[2:],
+
+    # misc
+    'ceil': lambda l: [math.ceil(l[0])] + l[1:],
+    'flr': lambda l: [math.floor(l[0])] + l[1:],
+
+    # statistics
+    'meana': lambda l: [statistics.mean(l)],
+    'stdva': lambda l: [statistics.stdev(l)],
+    'mean': lambda l: [statistics.mean(l[1: l[0]+1])] + l[l[0]+1:],
+    'stdv': lambda l: [statistics.stdev(l[1: l[0]+1])] + l[l[0]+1:],
+    'meanstdva': lambda l: [statistics.mean(l), statistics.stdev(l)],
+    'meanstdv': lambda l: [
+                              statistics.mean(l[1: l[0]+1]),
+                              statistics.stdev(l[1: l[0]+1])
+                          ] + l[l[0]+1:],
 
     # stack operations
     'swp': lambda l: [l[1], l[0]] + l[2:],
