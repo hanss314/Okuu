@@ -1,3 +1,6 @@
+import discord
+import random
+
 from .UTTT import mafia
 from .UTTT.board import UTTT_Board
 from discord.ext import commands
@@ -16,7 +19,8 @@ class Games:
         self.bot = bot
         self.mafia_games = yaml.safe_load(open('bot_data/mafia.yml', 'r'))
 
-    def get_game(self, player, db, emptytype, auto_join=True, constr_args=()):
+    @staticmethod
+    def get_game(player, db, emptytype, auto_join=True, constr_args=()):
         game = None
         for k in db.keys():
             if player in k:
@@ -40,7 +44,6 @@ class Games:
             board = db[game]
 
         return game, board
-
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
@@ -153,6 +156,10 @@ When your are sent to a field that is already decided, you can choose freely.
                 'You have already joined! Use `{ctx.prefix}mafia start` to vote to start the game.'
             )
 
+        for existing_game in self.mafia.values():
+            if ctx.author.id in existing_game['players']:
+                return await ctx.send('You are in another game!')
+
         game['players'][ctx.author.id] = mafia.new_player()
         await ctx.send('Joined game! Use `{ctx.prefix}mafia start` to vote to start.')
 
@@ -195,11 +202,53 @@ When your are sent to a field that is already decided, you can choose freely.
         for innocent in game['innocents']:
             self.bot.get_user(innocent).send('You are an innocent. Every day, you vote to lynch someone.')
 
+        await mafia.prompt_voting(self.bot, game)
+
+    @mafia.command(name='vote')
+    async def mafia_vote(self, ctx, number: int):
+        number -= 1
+        if not isinstance(ctx.channel, discord.PrivateChannel):
+            try: await ctx.message.delete()
+            except discord.Forbidden: pass
+            await ctx.send('Please only vote in DMs.')
+
+        for game in self.mafia:
+            if ctx.author.id in game['players']:
+                game = game
+                break
+        else:
+            return await ctx.send('You are not in a game.')
+
+        if not game['started']:
+            return await ctx.send('The game has not started.')
+
+        if ctx.author.id not in game['can_vote']:
+            return await ctx.send('You may not vote during this phase.')
+
+        game['votes'][ctx.author.id] = number
+        await ctx.send('Vote recorded')
+        if len(game['votes']) < len(game['can_vote']): return
+
+        count = len(game['candidates'])
+        mafia.process_votes(game)
+
+
+        if len(game['candidates']) == 1:
+            await mafia.next_phase(self.bot, game)
+        elif count != len(game['candidates']):
+            await mafia.prompt_voting(self.bot, game)
+            return
+        else:
+            game['candidates'] = random.sample(game['candidates'], 1)
+            for user in game['can_vote']:
+                self.bot.get_user(user).send('Stalemate reached. Choosing random user.')
+
+            await mafia.next_phase(self.bot, game)
+
     @mafia_join.after_invoke
     @mafia_start.after_invoke
     async def save_mafia(self, _):
         yaml.dump(self.mafia, open('bot_data/mafia.yml', 'w'))
-
 
 
 def setup(bot):
