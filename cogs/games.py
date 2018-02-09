@@ -234,7 +234,7 @@ When your are sent to a field that is already decided, you can choose freely.
 
 
         if len(game['candidates']) == 1:
-            await mafia.next_phase(self.bot, game)
+            win = await mafia.next_phase(self.bot, game)
         elif count != len(game['candidates']):
             await mafia.prompt_voting(self.bot, game)
             return
@@ -243,7 +243,10 @@ When your are sent to a field that is already decided, you can choose freely.
             for user in game['can_vote']:
                 self.bot.get_user(user).send('Stalemate reached. Choosing random user.')
 
-            await mafia.next_phase(self.bot, game)
+            win = await mafia.next_phase(self.bot, game)
+
+        if win:
+            del self.mafia[game['channel']]
 
     @mafia_join.after_invoke
     @mafia_start.after_invoke

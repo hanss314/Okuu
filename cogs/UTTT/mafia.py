@@ -108,7 +108,95 @@ async def next_phase(bot, game):
         else:
             await detective.send(f'{selected} is an innocent.')
 
+        messages = random.choice(stories)
+        if game['will_die']:
+            await bot.get_channel(game['channel']).send(
+                messages[0].format(dead=bot.get_user(game['will_die'][0]))
+            )
+            if len(game['will_die']) > 1 and game['will_die'][1] == game['will_die'][0]:
+                await bot.get_channel(game['channel']).send(
+                    messages[1].format(dead=bot.get_user(game['will_die'][0]))
+                )
+            else:
+                kill(game, game['will_die'][0])
+
+        game['candidates'] = [
+            p for p in game['players'].keys()
+            if p not in game['dead']
+        ]
+        game['can_vote'] = list(game['candidates'])
         game['phase'] = 63
+
+    elif game['phase'] == 63:
+        kill(game, game['candidates'][0])
+
+    increment_phase(game)
+    win_state = check_win(game)
+    if win_state == -1:
+        await bot.get_channel(game['channel']).send('All the innocents are dead. The mafia win!')
+        return -1
+    elif win_state == 1:
+        await bot.get_channel(game['channel']).send('The mafia are dead. The villagers win!')
+        return 1
+    await prompt_voting(bot, game)
+    return 0
+
+
+def increment_phase(game):
+    if game['phase'] == 1 and (game['doctor'] is None or game['doctor'] in game['dead']):
+        game['can_vote'] = [game['detective']]
+        game['phase'] = 2
+        increment_phase(game)
+
+    elif game['phase'] == 2 and (game['detective'] is None or game['detective'] in game['dead']):
+        game['candidates'] = [
+            p for p in game['players'].keys()
+            if p not in game['dead']
+        ]
+        game['can_vote'] = list(game['candidates'])
+        game['phase'] = 63
+        increment_phase(game)
+
+
+def kill(game, user):
+    if user in game['mafia']:
+        game['mafia'].remove(user)
+
+    if user == game['doctor']:
+        game['doctor'] = None
+
+    if user == game['detective']:
+        game['detective'] = None
+
+    game['dead'].append(user)
+
+    if user in game['candidates']:
+        game['candidates'].remove(user)
+
+    game['will_die'] = []
+
+
+def check_win(game):
+    for player in game['players'].keys():
+        # if a living player is not a mafia
+        if player not in game['dead'] and player not in game['mafia']:
+            break
+
+    else:
+        # if no living players are not mafia, mafia win
+        return -1
+
+    for player in game['mafia']:
+        # if mafia is alive
+        if player not in game['dead']:
+            break
+
+    else:
+        # if no mafia are alive villagers win
+        return 1
+
+    # no winstate
+    return 0
 
 
 stories = [
