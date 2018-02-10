@@ -207,7 +207,7 @@ When your are sent to a field that is already decided, you can choose freely.
     @mafia.command(name='vote')
     async def mafia_vote(self, ctx, number: int):
         number -= 1
-        if not isinstance(ctx.channel, discord.PrivateChannel):
+        if not isinstance(ctx.channel, discord.abc.PrivateChannel):
             try: await ctx.message.delete()
             except discord.Forbidden: pass
             await ctx.send('Please only vote in DMs.')
