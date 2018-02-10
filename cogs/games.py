@@ -212,7 +212,7 @@ When your are sent to a field that is already decided, you can choose freely.
             except discord.Forbidden: pass
             await ctx.send('Please only vote in DMs.')
 
-        for game in self.mafia_games:
+        for game in self.mafia_games.values():
             if ctx.author.id in game['players']:
                 game = game
                 break
