@@ -135,7 +135,7 @@ When your are sent to a field that is already decided, you can choose freely.
         '''
         await ctx.send(d)
 
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     async def mafia(self, ctx):
         '''Play a game of mafia'''
         await ctx.send(f'Use `{ctx.prefix}mafia join` to join a game of mafia on this server!')
@@ -146,30 +146,30 @@ When your are sent to a field that is already decided, you can choose freely.
         Join a game of mafia in this channel
         Use `mafia start` to vote to start the game
         '''
-        if ctx.channel.id in self.mafia:
-            game = self.mafia[ctx.channel.id]
+        if ctx.channel.id in self.mafia_games:
+            game = self.mafia_games[ctx.channel.id]
         else:
-            game = self.mafia[ctx.author.id] = mafia.new_game(ctx.channel.id)
+            game = self.mafia_games[ctx.channel.id] = mafia.new_game(ctx.channel.id)
 
         if ctx.author.id in game['players']:
             return await ctx.send(
-                'You have already joined! Use `{ctx.prefix}mafia start` to vote to start the game.'
+                f'You have already joined! Use `{ctx.prefix}mafia start` to vote to start the game.'
             )
 
-        for existing_game in self.mafia.values():
+        for existing_game in self.mafia_games.values():
             if ctx.author.id in existing_game['players']:
                 return await ctx.send('You are in another game!')
 
         game['players'][ctx.author.id] = mafia.new_player()
-        await ctx.send('Joined game! Use `{ctx.prefix}mafia start` to vote to start.')
+        await ctx.send(f'Joined game! Use `{ctx.prefix}mafia start` to vote to start.')
 
     @mafia.command(name='start')
     async def mafia_start(self, ctx):
         '''Vote to start the game'''
-        if ctx.channel.id not in self.mafia or ctx.author.id not in self.mafia[ctx.channel.id]['players']:
+        if ctx.channel.id not in self.mafia_games or ctx.author.id not in self.mafia_games[ctx.channel.id]['players']:
             return await ctx.send('You have not joined the game.')
 
-        game = self.mafia[ctx.channel.id]
+        game = self.mafia_games[ctx.channel.id]
         if game['started']:
             return await ctx.send('Game has already started')
 
@@ -212,7 +212,7 @@ When your are sent to a field that is already decided, you can choose freely.
             except discord.Forbidden: pass
             await ctx.send('Please only vote in DMs.')
 
-        for game in self.mafia:
+        for game in self.mafia_games:
             if ctx.author.id in game['players']:
                 game = game
                 break
@@ -246,12 +246,12 @@ When your are sent to a field that is already decided, you can choose freely.
             win = await mafia.next_phase(self.bot, game)
 
         if win:
-            del self.mafia[game['channel']]
+            del self.mafia_games[game['channel']]
 
     @mafia_join.after_invoke
     @mafia_start.after_invoke
     async def save_mafia(self, _):
-        yaml.dump(self.mafia, open('bot_data/mafia.yml', 'w'))
+        yaml.dump(self.mafia_games, open('bot_data/mafia.yml', 'w'))
 
 
 def setup(bot):
