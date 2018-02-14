@@ -141,7 +141,7 @@ class Voting:
         lang = slide[0].split(".")[-1]
         d = 'Pick the better one:\n'
         d += ':regional_indicator_a: '
-        if slide in self.votes['broke']:
+        if slide[0] in self.votes['broke']:
             d += '**Not working** '
         d += f'{count_lines(content)} line(s)'
         if len(content) < 1900:
@@ -160,7 +160,7 @@ class Voting:
             content = open(slide[1], 'rb').read()
         lang = slide[1].split(".")[-1]
         d = ':regional_indicator_b: '
-        if slide in self.votes['broke']:
+        if slide[1] in self.votes['broke']:
             d += '**Not working** '
         d += f'{count_lines(content)} line(s)'
         if len(content) < 1900:
