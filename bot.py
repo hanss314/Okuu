@@ -88,7 +88,7 @@ class CodeNamesBot(commands.Bot):
         self.logger.info('Guilds  : {}'.format(len(self.guilds)))
         self.logger.info('Users   : {}'.format(len(set(self.get_all_members()))))
         self.logger.info('Channels: {}'.format(len(list(self.get_all_channels()))))
-        game = discord.Game(name='{}help'.format(self.command_prefix))
+        game = discord.Game(name='with a nuclear reactor | {}help'.format(self.command_prefix))
         await self.change_presence(game=game)
 
     async def close(self):

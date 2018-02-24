@@ -12,9 +12,6 @@ class Core:
     def __init__(self, bot):
         self.bot = bot
 
-    def __local_check(self, ctx):
-        return commands.is_owner()
-
     @commands.command()
     @commands.is_owner()
     async def say(self, ctx, channel: discord.TextChannel, *, text: str):

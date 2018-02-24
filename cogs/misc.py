@@ -170,10 +170,7 @@ class Misc:
                     cmd = cmd.all_commands[i]
                     cmd_name += cmd.name + ' '
                 else:
-                    if cmd == ctx.bot:
-                        d += 'Unyu?'
-                    else:
-                        d += 'Unyu?'
+                    d += 'Unyu?'
                     break
 
             else:
