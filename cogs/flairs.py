@@ -167,6 +167,7 @@ class Flairs:
     @commands.guild_only()
     @commands.has_permissions(manage_roles=True)
     async def rem_flair(self, ctx, name):
+        """Remove a self assignable flair"""
         if ctx.guild.id not in self.flairs:
             return await ctx.send('Flair not found')
 
@@ -176,6 +177,42 @@ class Flairs:
                 return await ctx.send(f'Removed {name} from {category}')
 
         await ctx.send('Flair not found')
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_permissions(manage_roles=True)
+    async def flaircount(self, ctx, category: lower=None):
+        """Count flairs"""
+        guild = self.flairs.get(ctx.guild.id)
+        if not guild: await ctx.send('There are no flairs')
+        def countrole(role):
+            count = 0
+            for member in ctx.guild.members:
+                if role in member.roles:
+                    count += 1
+
+            return count
+
+        if category:
+            flairs = guild.get(category)
+            if not flairs: return await ctx.send('Category not found')
+            d = f'Role count for {category}:\n\n'
+            for role in flairs.values():
+                role = discord.utils.find(lambda r: r.id == role, ctx.guild.roles)
+                d += f'*{role.name}*: {countrole(role)}\n'
+
+            await ctx.send(d)
+
+        else:
+            for category, flairs in guild.items():
+                d = f'Role count for {category}:\n\n'
+                for role in flairs.values():
+                    role = discord.utils.find(lambda r: r.id == role, ctx.guild.roles)
+                    d += f'*{role.name}*: {countrole(role)}\n'
+
+                await ctx.send(d)
+
+
 
     @add_flair.after_invoke
     @rem_flair.after_invoke
