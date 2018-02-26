@@ -42,7 +42,7 @@ class Flairs:
 
             for f in flairs:
                 embed.add_field(
-                    name=f'*{f}*',
+                    name=f'*{f.upper()}*',
                     value='\n'.join(f'`{ctx.prefix}f {i}`' for i in flairs[f]),
                     inline=False)
         embed.set_footer(text=f'Requested by {ctx.author}')
