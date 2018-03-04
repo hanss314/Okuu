@@ -195,6 +195,7 @@ def sort_entry(name, entry):
         text = re.sub(r'<ref>.*?</ref>', r'', text)
         text = re.sub(r'\[\[.*?\|(.*?)\]\]', r'\1', text)
         text = re.sub(r'{{.*?\|(.*?)\|.*?}}', r'\1', text)
+        text = text.replace('<br>', ' / ')
         return text
 
     sorted_entry = {
