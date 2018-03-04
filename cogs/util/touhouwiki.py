@@ -1,5 +1,8 @@
 import re
 import mwclient
+import json
+import aiohttp
+import asyncio
 
 touhouwiki = mwclient.Site('en.touhouwiki.net/', path='')
 
@@ -37,6 +40,8 @@ STAGE_ABBREVS = {
 }
 
 STAGE_NAMES = []
+
+PAGE_CACHE = {}
 
 
 def stage_name(predicate):
@@ -81,9 +86,12 @@ def otherwise(link, _):
     link['s'] = f'Spell Cards/Stage {link["s"]}'
 
 
-def get_spellcards():
+def get_spellcards(cached=True):
+    if cached:
+        return json.load(open('bot_data/spellcards.json', 'r'))
+
     pages = [
-        touhouwiki.pages[f'List of Spell Cards/Touhou Project {num}'] for num in range(1, 2)
+        touhouwiki.pages[f'List of Spell Cards/Touhou Project {num}'] for num in range(1, 4)
     ]
     sections = []
     entries = []
@@ -93,6 +101,7 @@ def get_spellcards():
     for section in sections:
         entries += gather_section(section)
 
+    json.dump(entries, open('bot_data/spellcards.json', 'w'))
     return entries
 
 
@@ -124,8 +133,7 @@ def gather_section(section):
 
 def sort_entry(name, entry):
     if entry[-1] == '}': entry.pop()
-    if len(entry) != 5: print(entry)
-    links = []
+    appearances = []
     for link in entry[3].split('<br>'):
         link = link.strip('|').strip()
         if not (link.startswith('{{') and link.endswith('}}')):
@@ -140,17 +148,77 @@ def sort_entry(name, entry):
                 break
 
         sc_page = f"{GAME_ABBREVS[link['g']]}/{link['s']}"
-        print(link, sc_page)
+        if sc_page in PAGE_CACHE:
+            page_entries = PAGE_CACHE[sc_page]
+        else:
+            page = touhouwiki.pages[sc_page].text().replace('||', '|')
+            page_entries = re.findall(r'{{Spell Card Info(.*?)\n}}', page, re.DOTALL)
+            page_entries = [
+                [
+                    value.split('=') for value in page_entry.split('\n|')
+                ] for page_entry in page_entries
+            ]
+            page_entries = [
+                {
+                    value[0].strip(): value[1].strip() for value in page_entry if len(value) > 1
+                } for page_entry in page_entries
+            ]
+            for page_entry in page_entries:
+                page_entry['transname'] = re.sub(r'<ref>.*?</ref>', '', page_entry['transname'])
+                page_entry['image'] = page_entry['image'].split('<br />')[0]
+                if 'comment' in page_entry:
+                    page_entry['comment'] = page_entry['comment'].replace('<br />', '\n')
+                if page_entry['image'].startswith('[[') and page_entry['image'].endswith(']]'):
+                    page_entry['image'] = page_entry['image'][2:-2].split('|')
+
+            PAGE_CACHE[sc_page] = page_entries
+
+        for page_entry in page_entries:
+            if page_entry['number'] == link['n'] or \
+                any(page_entry['name'] == e['name'] for e in appearances):
+                appearances.append({
+                    'name': page_entry['name'],
+                    'game': link['g'],
+                    'image': page_entry['image'][0],
+                    'difficulty': page_entry['difficulty'] if 'difficulty' in page_entry else 'Story',
+                    'comment': page_entry['comment'] if 'comment' in page_entry else ''
+                })
+
 
     sorted_entry = {
         'japanese': entry[0],
         'english': entry[1],
         'comments': entry[2].replace("''", '*'),
         'owner': name,
-        'links': links
+        'appearances': appearances
     }
     return sorted_entry
 
 
+async def get_thumbnail(character):
+    thumbnail = touhouwiki.pages[character].text(section=0)
+    thumbnail = re.search(r'{{Infobox Character\n(.*)\n}}', thumbnail, re.DOTALL).group(1).split('\n|')
+    for section in thumbnail:
+        if section.strip().startswith('image'):
+            thumbnail = section.split('=')[1].strip()[2:-2].split('|')[0]
+            break
+
+    return await get_image_url(thumbnail)
+
+async def get_image_url(image):
+    async with aiohttp.ClientSession() as session:
+        page = await session.get(f'https://en.touhouwiki.net/wiki/{image}')
+
+    page = await page.text()
+    page = re.search(r'<img (.*?) />', page).group(1).split(' ')
+    for value in page:
+        if value.startswith('src'):
+            page = value.split('=')[1][1:-1]
+            return f'https://en.touhouwiki.net{page}'
+
+
+
 if __name__ == '__main__':
-    print(get_spellcards())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(get_thumbnail('Utsuho Reiuji'))
+    loop.close()

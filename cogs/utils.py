@@ -1,10 +1,12 @@
 import asyncio
 import math
 import statistics
+import discord
 
+from os import path
 from ruamel import yaml
 from string import ascii_letters
-from .util import sudoku, comp_parser
+from .util import sudoku, comp_parser, touhouwiki
 from discord.ext import commands
 
 acceptable = ascii_letters + '0123456789'
@@ -95,8 +97,14 @@ class Utils:
 
     def __init__(self, bot):
         self.bot = bot
-        with open('stacks.yml', 'r') as stacks:
+        if not path.isfile('bot_data/stacks.yml'):
+            with open('bot_data/stacks.yml', 'w+') as flairs:
+                yaml.dump({}, flairs)
+
+        with open('bot_data/stacks.yml', 'r') as stacks:
             self.stacks = yaml.load(stacks)
+
+        self.spellcards = touhouwiki.get_spellcards()
 
     @commands.group(invoke_without_command=True)
     async def rpn(self, ctx, *ops):
@@ -209,6 +217,141 @@ class Utils:
                 f'The charge is {charge:+d}.'
             )
 
+    @commands.command()
+    async def spellcard(self, ctx, *search_params: lambda s: s.lower()):
+        """
+        Search for a spellcard
+
+        Search options:
+            `--user <user>` - Find spellcards by character
+            `--name <name>` - Find spellcards by name
+            `--game <game>` - Find spellcards by game
+            `--diff <difficulty>` - Find spellcards by difficuty
+        """
+        key = ''
+        value = ''
+        search_terms = {}
+        for term in search_params:
+            if term.startswith('--'):
+                if value and key:
+                    search_terms[key] = value.strip()
+                    value = ''
+
+                if term[2:] not in ['user', 'name', 'game', 'diff']:
+                    return await ctx.send(f'Invalid flag: `{term}`')
+
+                key = term[2:]
+            else:
+                value += term + ' '
+
+        if value and key: search_terms[key] = value.strip()
+        if not search_terms:
+            return await ctx.send('Unyu? Search parameters are required')
+
+        search = self.spellcards
+        for key, value in search_terms.items():
+            if key == 'user':
+                search = [
+                    spellcard for spellcard in search
+                    if value in spellcard['owner'].lower()
+                ]
+            elif key == 'name':
+                search = [
+                    spellcard for spellcard in search
+                    if value in spellcard['english'].lower()
+                ]
+            elif key == 'game':
+                search = [
+                    spellcard for spellcard in search
+                    if any(
+                        value == appearance['game'].lower() \
+                            or value in touhouwiki.GAME_ABBREVS[appearance['game']].lower()
+                        for appearance in spellcard['appearances']
+                    )
+                ]
+            elif key == 'diff':
+                search = [
+                    spellcard for spellcard in search
+                    if any(
+                        appearance['difficulty'].lower().startswith(value) or \
+                            appearance['difficulty'] == value
+                        for appearance in spellcard['appearances']
+                    )
+                ]
+
+        if len(search) == 0:
+            return await ctx.send('Unyu? I didn\'t find any spellcards')
+        elif len(search) > 1:
+            m = '**Found the following:**\n'
+            for entry in search:
+                m += f'\n{entry["owner"]} - {entry["english"]}'
+
+            m += '\n\n Please narrow your search terms'
+            try:
+                await ctx.send(m)
+            except discord.HTTPException:
+                await ctx.send('That\'s a lot of results. I forget the first one')
+
+        else:
+            entry = search[0]
+            search = entry['appearances']
+            for key, value in search_terms.items():
+                if key == 'game':
+                    search = [
+                        appearance for appearance in search
+                        if value == appearance['game'].lower() \
+                            or value in touhouwiki.GAME_ABBREVS[appearance['game']].lower()
+                    ]
+                elif key == 'diff':
+                    search = [
+                        appearance for appearance in search
+                        if appearance['difficulty'].lower().startswith(value) or \
+                            appearance['difficulty'] == value
+                    ]
+
+            if len(search) == 0:
+                return await ctx.send('Unyu? I didn\'t find any spellcards')
+            else:
+                embed = discord.Embed(title=entry['japanese'], description=entry['english'])
+                embed.set_author(
+                    name=entry['owner'],
+                    url=f'https://en.touhouwiki.net/wiki/{entry["owner"].replace(" ", "_")}'
+                )
+
+                embed.set_thumbnail(url=await touhouwiki.get_thumbnail(entry['owner']))
+
+                if len(search) == 1:
+                    appearance = search[0]
+                    if 'comment' in appearance and appearance['comment']:
+                        embed.add_field(name='Comment', value=appearance['comment'])
+
+                    embed.set_image(url=await touhouwiki.get_image_url(appearance['image']))
+                    embed.set_footer(
+                        text=f'{touhouwiki.GAME_ABBREVS[appearance["game"]]} | {appearance["difficulty"]}'
+                    )
+
+                else:
+                    if 'comment' in entry and entry['comment']:
+                        embed.add_field(name='Comment', value=entry['comments'])
+
+                await ctx.send(embed=embed)
+
+
+    @commands.command()
+    @commands.is_owner()
+    async def reload_spellcards(self, ctx):
+        """Reload the spellcard database"""
+        await ctx.send('Reloading spellcards')
+        self.spellcards = await self.bot.loop.run_in_executor(
+            None, touhouwiki.get_spellcards, False
+        )
+        await ctx.send('Reloaded spellcards')
+
+
 
 def setup(bot):
     bot.add_cog(Utils(bot))
+
+
+if __name__ == '__main__':
+    cog = Utils(None)
