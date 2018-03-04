@@ -283,13 +283,14 @@ class Utils:
         elif len(search) > 1:
             m = '**Found the following:**\n'
             for entry in search:
+                if len(m) + len(entry["owner"]) + len(entry["english"]) > 1900:
+                    m += '\n\nThat\'s a lot of results. I forget the rest'
+                    break
+
                 m += f'\n{entry["owner"]} - {entry["english"]}'
 
             m += '\n\n Please narrow your search terms'
-            try:
-                await ctx.send(m)
-            except discord.HTTPException:
-                await ctx.send('That\'s a lot of results. I forget the first one')
+            await ctx.send(m)
 
         else:
             entry = search[0]
