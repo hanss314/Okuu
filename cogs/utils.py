@@ -258,7 +258,7 @@ class Utils:
             elif key == 'name':
                 search = [
                     spellcard for spellcard in search
-                    if value in spellcard['english'].lower()
+                    if value in spellcard['english'].lower().replace('"', ' ')
                 ]
             elif key == 'game':
                 search = [
@@ -308,38 +308,35 @@ class Utils:
                         appearance['difficulty'] == value
                     ]
 
-            if len(search) == 0:
-                return await ctx.send('Unyu? I didn\'t find any spellcards')
-            else:
-                embed = discord.Embed(title=entry['japanese'], description=entry['english'])
-                embed.set_author(
-                    name=entry['owner'],
-                    url=f'https://en.touhouwiki.net/wiki/{entry["owner"].replace(" ", "_")}'
+            embed = discord.Embed(title=entry['japanese'], description=entry['english'])
+            embed.set_author(
+                name=entry['owner'],
+                url=f'https://en.touhouwiki.net/wiki/{entry["owner"].replace(" ", "_")}'
+            )
+
+            embed.set_thumbnail(url=await touhouwiki.get_thumbnail(entry['owner']))
+            if len(search) == 1:
+                appearance = search[0]
+                if 'comment' in appearance and appearance['comment']:
+                    embed.add_field(name='Comment', value=appearance['comment'])
+
+                embed.set_image(url=await touhouwiki.get_image_url(appearance['image']))
+                embed.set_footer(
+                    text=f'{touhouwiki.GAME_ABBREVS[appearance["game"]]} | {appearance["difficulty"]}'
                 )
 
-                embed.set_thumbnail(url=await touhouwiki.get_thumbnail(entry['owner']))
+            else:
+                if 'comment' in entry and entry['comment']:
+                    embed.add_field(name='Comment', value=entry['comments'])
 
-                if len(search) == 1:
-                    appearance = search[0]
-                    if 'comment' in appearance and appearance['comment']:
-                        embed.add_field(name='Comment', value=appearance['comment'])
-
-                    embed.set_image(url=await touhouwiki.get_image_url(appearance['image']))
-                    embed.set_footer(
-                        text=f'{touhouwiki.GAME_ABBREVS[appearance["game"]]} | {appearance["difficulty"]}'
-                    )
-
-                else:
-                    if 'comment' in entry and entry['comment']:
-                        embed.add_field(name='Comment', value=entry['comments'])
-
+                if search:
                     embed.add_field(
                         name='Appears in:',
                         value='\n'.join(f'{touhouwiki.GAME_ABBREVS[a["game"]]} - {a["difficulty"]}' for a in search),
                         inline=False
                     )
 
-                await ctx.send(embed=embed)
+            await ctx.send(embed=embed)
 
     @commands.command()
     @commands.is_owner()
