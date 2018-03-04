@@ -174,7 +174,13 @@ def sort_entry(name, entry):
             PAGE_CACHE[sc_page] = page_entries
 
         for page_entry in page_entries:
-            if page_entry['number'] == link['n'] or \
+            try: entry_number = int(page_entry['number'])
+            except ValueError: entry_number = page_entry['number']
+
+            try: link_number = int(link['n'])
+            except ValueError: link_number = link['n']
+
+            if entry_number == link_number or \
                 any(page_entry['name'] == e['name'] for e in appearances):
                 appearances.append({
                     'name': page_entry['name'],
