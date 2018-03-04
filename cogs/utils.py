@@ -335,7 +335,7 @@ class Utils:
 
                     embed.add_field(
                         name='Appears in:',
-                        value='\n'.join(f'{a["game"]} - {a["difficulty"]}' for a in search),
+                        value='\n'.join(f'{touhouwiki.GAME_ABBREVS[a["game"]]} - {a["difficulty"]}' for a in search),
                         inline=False
                     )
 
