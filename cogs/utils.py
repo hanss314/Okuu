@@ -264,8 +264,8 @@ class Utils:
                 search = [
                     spellcard for spellcard in search
                     if any(
-                        value == appearance['game'].lower() \
-                            or value in touhouwiki.GAME_ABBREVS[appearance['game']].lower()
+                        value == appearance['game'].lower() or
+                        value in touhouwiki.GAME_ABBREVS[appearance['game']].lower()
                         for appearance in spellcard['appearances']
                     )
                 ]
@@ -273,8 +273,7 @@ class Utils:
                 search = [
                     spellcard for spellcard in search
                     if any(
-                        appearance['difficulty'].lower().startswith(value) or \
-                            appearance['difficulty'] == value
+                        appearance['difficulty'].lower().startswith(value) or appearance['difficulty'] == value
                         for appearance in spellcard['appearances']
                     )
                 ]
@@ -299,14 +298,14 @@ class Utils:
                 if key == 'game':
                     search = [
                         appearance for appearance in search
-                        if value == appearance['game'].lower() \
-                            or value in touhouwiki.GAME_ABBREVS[appearance['game']].lower()
+                        if value == appearance['game'].lower()
+                        or value in touhouwiki.GAME_ABBREVS[appearance['game']].lower()
                     ]
                 elif key == 'diff':
                     search = [
                         appearance for appearance in search
-                        if appearance['difficulty'].lower().startswith(value) or \
-                            appearance['difficulty'] == value
+                        if appearance['difficulty'].lower().startswith(value) or
+                        appearance['difficulty'] == value
                     ]
 
             if len(search) == 0:
@@ -334,8 +333,13 @@ class Utils:
                     if 'comment' in entry and entry['comment']:
                         embed.add_field(name='Comment', value=entry['comments'])
 
-                await ctx.send(embed=embed)
+                    embed.add_field(
+                        name='Appears in:',
+                        value='\n'.join(f'{a["game"]} - {a["difficulty"]}' for a in search),
+                        inline=False
+                    )
 
+                await ctx.send(embed=embed)
 
     @commands.command()
     @commands.is_owner()
@@ -346,7 +350,6 @@ class Utils:
             None, touhouwiki.get_spellcards, False
         )
         await ctx.send('Reloaded spellcards')
-
 
 
 def setup(bot):
