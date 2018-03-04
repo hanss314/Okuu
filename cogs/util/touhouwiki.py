@@ -191,9 +191,15 @@ def sort_entry(name, entry):
                 })
 
 
+    def clean(text):
+        text = re.sub(r'<ref>.*?</ref>', r'', text)
+        text = re.sub(r'\[\[.*?\|(.*?)\]\]', r'\1', text)
+        text = re.sub(r'{{.*?\|(.*?)\|.*?}}', r'\1', text)
+        return text
+
     sorted_entry = {
-        'japanese': entry[0],
-        'english': entry[1],
+        'japanese': clean(entry[0]),
+        'english': clean(entry[1]),
         'comments': entry[2].replace("''", '*'),
         'owner': name,
         'appearances': appearances
