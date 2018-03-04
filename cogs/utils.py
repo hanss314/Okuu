@@ -258,7 +258,7 @@ class Utils:
             elif key == 'name':
                 search = [
                     spellcard for spellcard in search
-                    if value in spellcard['english'].lower()
+                    if value in spellcard['english'].lower().replace('"', '')
                 ]
             elif key == 'game':
                 search = [
