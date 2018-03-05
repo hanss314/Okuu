@@ -28,6 +28,8 @@ class Voting:
         with open('votes.yml', 'r') as votes:
             self.votes = yaml.load(votes)
 
+        self.can_vote = False
+
     def get_count(self, filename):
         acc = 0
         for vote in self.votes['votes'].values():
@@ -47,6 +49,12 @@ class Voting:
         Use `vote` to get a voting slide
         Pick a slide with `vote a` or `vote b`
         """
+        if not self.can_vote:
+            return await ctx.send(
+                'Voting is not enabled right now. '
+                'Contact hanss314#0128 if you think this is a mistake'
+            )
+
         if ctx.author.id in self.votes['slides'] and self.votes['slides'][ctx.author.id] == -1:
             return await ctx.send('You\'ve voted on everything, please stop voting.')
 
@@ -123,15 +131,11 @@ class Voting:
 
         def count_lines(lines):
             try:
-                lines = lines.split('\n')
+                lines = lines.rstrip('\n').split('\n')
             except TypeError:
-                return 1
-            count = len(lines)
-            for x in reversed(lines):
-                if x == '':
-                    count -= 1
-                else:
-                    return count
+                lines = lines.rstrip(b'\n').split(b'\n')
+
+            return len(lines)
 
         slide = self.votes['slides'][ctx.author.id]
         try:
@@ -234,6 +238,19 @@ class Voting:
             with open('results.txt', 'a+') as results_file:
                 results_file.write(msg+'\n\n\n')
 
+    @commands.command()
+    @commands.is_owner()
+    async def toggle_voting(self, ctx):
+        self.can_vote = not self.can_vote
+        if self.can_vote: await ctx.send('Voting enabled.')
+        else: await ctx.send('Voting disabled.')
+
+    @commands.command()
+    @commands.is_owner()
+    async def fully_voted(self, ctx):
+        await ctx.send(', '.join(
+            self.bot.get_user(user).name for user in self.votes['slides'] if self.votes['slides'][user] == -1
+        ) or 'Nobody')
 
 def setup(bot):
     bot.add_cog(Voting(bot))
