@@ -326,8 +326,11 @@ class Utils:
                 appearance = search[0]
                 if 'comment' in appearance and appearance['comment']:
                     embed.add_field(name='Comment', value=appearance['comment'])
-                if appearance['image']:
+                try:
                     embed.set_image(url=await touhouwiki.get_image_url(appearance['image']))
+                except AttributeError:
+                    pass
+
                 embed.set_footer(
                     text=f'{touhouwiki.GAME_ABBREVS[appearance["game"]]} | {appearance["difficulty"]}'
                 )
