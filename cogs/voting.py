@@ -185,6 +185,7 @@ class Voting:
     @commands.command()
     @commands.is_owner()
     async def results(self, ctx):
+        """Do results"""
         def get_percentage(response):
             return 100 * sum(response['votes']) / response['count']
 
@@ -241,6 +242,7 @@ class Voting:
     @commands.command()
     @commands.is_owner()
     async def toggle_voting(self, ctx):
+        """Toggle voting"""
         self.can_vote = not self.can_vote
         if self.can_vote: await ctx.send('Voting enabled.')
         else: await ctx.send('Voting disabled.')
@@ -248,6 +250,7 @@ class Voting:
     @commands.command()
     @commands.is_owner()
     async def fully_voted(self, ctx):
+        """See the people who have voted the max number of times"""
         await ctx.send(', '.join(
             self.bot.get_user(user).name for user in self.votes['slides'] if self.votes['slides'][user] == -1
         ) or 'Nobody')
