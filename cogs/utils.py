@@ -278,6 +278,12 @@ class Utils:
                     )
                 ]
 
+        if 'name' in search_terms:
+            for spellcard in search:
+                if search_terms['name'] == spellcard['english'].lower().replace('"', ' '):
+                    search = [spellcard]
+                    break
+
         if len(search) == 0:
             return await ctx.send('Unyu? I didn\'t find any spellcards')
         elif len(search) > 1:
