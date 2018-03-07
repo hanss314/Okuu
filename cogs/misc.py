@@ -119,6 +119,10 @@ class Misc:
 
         await ctx.send(d)
 
+    @commands.command()
+    async def dab(self, ctx):
+        await ctx.send('<:nueDab:404506021114150922>')
+
     @commands.command(aliases=['tatsukete_eirin', 'eirin'])
     async def help(self, ctx, *args):
         """This help message"""
