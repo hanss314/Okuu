@@ -1,9 +1,13 @@
 import random
 import discord
-import math
+import shlex
+import asyncio
+import time
 
 from os import listdir
 from os.path import isfile, join
+from .UTTT.avocado import MultiplayerAvocado
+from subprocess import Popen, PIPE
 
 from ruamel import yaml
 from discord.ext import commands
@@ -254,6 +258,98 @@ class Voting:
         await ctx.send(', '.join(
             self.bot.get_user(user).name for user in self.votes['slides'] if self.votes['slides'][user] == -1
         ) or 'Nobody')
+
+    @commands.command()
+    @commands.is_owner()
+    async def fight(self, ctx):
+        moves = {
+            0: 'slice',
+            1: 'mash',
+            2: 'eat',
+            3: 'buy'
+        }
+        competitors = {
+            'responses/100764870617624576': 'Zwei',
+            'python3 responses/140564059417346049.py': 'Noahkiq',
+            'python3 responses/240995021208289280.py': 'hanss314',
+            'node responses/107118384813977600.js': 'Untypable',
+            'python3 responses/161508165672763392.py': 'Bottersnike',
+            'lua responses/248156896131940354.lua': '_zM',
+            'python3 responses/137001076284063744.py': 'Bazinga_9000',
+            'python3 responses/186553034439000064.py':' Milo Jacquet',
+            'responses/bin/236257776421175296': '96 LB'
+        }
+        results = {competitor: 0 for competitor in competitors.values()}
+        competitions = [(a, b) for a in competitors.keys() for b in competitors.keys() if a != b]
+
+        async def fight(a, b):
+            fighters = [a, b]
+            a = shlex.split(a)
+            b = shlex.split(b)
+            game = MultiplayerAvocado()
+            while True:
+                if game.turn == 0:
+                    turn = a
+                else:
+                    turn = b
+
+                proc = Popen(turn + [str(game.spoon)] + list(map(str, game.previous)), stdout=PIPE, stderr=PIPE)
+                out, err = proc.communicate()
+                if err:
+                    await ctx.send(f'{competitors[fighters[game.turn]]} errored!')
+                    break
+
+                o = f'{competitors[fighters[game.turn]]} outputs `{out.decode("utf-8").strip()}`.'
+
+                try:
+                    out = int(out)
+                    if len(game.previous) == 0:
+                        game.set_avocados(out)
+                        await ctx.send(f'{o} The starting avocado count is `{game.previous[0]}`')
+                    elif game.spoon == -1:
+                        game.set_spoon(out)
+                        await ctx.send(f'{o} The starting spoon size is `{game.spoon}`')
+                    else:
+                        move = moves[out]
+                        try: game.__getattribute__(move)()
+                        finally: await ctx.send(f'{o} They will `{move}`. The avocado count is `{game.previous[-1]}`')
+                        if len(game.previous) % 10 == 0:
+                            await ctx.send(f'Avocado history: {", ".join(list(map(str, game.previous)))}')
+
+                except (ValueError, KeyError):
+                    await ctx.send(f'Avocado history: {", ".join(list(map(str, game.previous)))}')
+                    break
+
+                await asyncio.sleep(7)
+
+            return (game.turn + 1) % 2
+
+        await ctx.send('The competition starts now!')
+        start_times = [time.time() + x * 24 * 60 * 60 / len(competitions) for x in range(1, len(competitions) + 1)]
+        start_times[-1] = 0
+        for pairing, timing in zip(competitions, start_times):
+            await ctx.send(f'**{competitors[pairing[0]]}** vs. **{competitors[pairing[1]]}**')
+            winner = await fight(*pairing)
+            await ctx.send(f'{competitors[pairing[winner]]} wins!')
+            results[competitors[pairing[winner]]] += 1
+            results[competitors[pairing[winner-1]]] -= 1
+            yaml.dump(results, open('bot_data/comp_results.json', 'w'))
+            if timing == 0:
+                results = list(results.items())
+                results.sort(key=lambda p: p[1])
+                results.reverse()
+                await ctx.send(
+                    f"**Final results:** \n{chr(10).join('*{}*: {}'.format(*entry) for entry in results)}"
+                )
+                yaml.dump(results, open('bot_data/comp_results.json', 'w'))
+                break
+            elif time.time() < timing:
+                wait_time = timing - time.time()
+                await ctx.send(f'The next round starts in {int(wait_time//60):02d}:{int(wait_time%60):02d}')
+                await asyncio.sleep(wait_time)
+            else:
+                await ctx.send('The next round starts now!')
+
 
 def setup(bot):
     bot.add_cog(Voting(bot))
