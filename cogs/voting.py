@@ -3,9 +3,9 @@ import discord
 import shlex
 import asyncio
 import time
+import os
+import itertools
 
-from os import listdir
-from os.path import isfile, join
 from .UTTT.avocado import MultiplayerAvocado
 from subprocess import Popen, PIPE
 
@@ -14,7 +14,6 @@ from discord.ext import commands
 
 
 RESP_DIR = 'cogs/responses'
-SUPERSCRIPT = ['ˢᵗ', 'ᶮᵈ', 'ʳᵈ'] + ['ᵗʰ'] * 7
 PERCENTAGE = 0.85
 
 
@@ -48,37 +47,39 @@ class Voting:
         return acc
 
     @commands.command()
-    async def vote(self, ctx, response: one_of_them=None):
-        """
-        Use `vote` to get a voting slide
-        Pick a slide with `vote a` or `vote b`
+    async def vote(self, ctx, response=None):
+        """Use `vote` to get a fresh slide
+        Vote on a slide with `vote a` or `vote b`
         """
         if not self.can_vote:
             return await ctx.send(
                 'Voting is not enabled right now. '
                 'Contact hanss314#0128 if you think this is a mistake'
             )
+        if response is not None: response = response.lower()
+        if response not in ['a', 'b', None]:
+            return await ctx.send('I was expecting the vote to be `a` or `b`')
 
         if ctx.author.id in self.votes['slides'] and self.votes['slides'][ctx.author.id] == -1:
             return await ctx.send('You\'ve voted on everything, please stop voting.')
 
         if not isinstance(ctx.channel, discord.abc.PrivateChannel):
-            try: await ctx.message.delete()
-            except discord.Forbidden: pass
+            try:
+                await ctx.message.delete()
+            except discord.Forbidden:
+                pass
             return await ctx.send('Please only vote in DMs.')
+
         create_new = False
         if ctx.author.id in self.votes['slides'] and response:
+            # Success in most cases, so try except is faster
             try:
                 votes = self.votes['votes'][ctx.author.id]
             except KeyError:
                 votes = self.votes['votes'][ctx.author.id] = []
 
-            v = self.votes['slides'][ctx.author.id]
-            if response == 'a':
-                votes.append((v[0], v[1]))
-            else:
-                votes.append((v[1], v[0]))
-
+            slide = self.votes['slides'][ctx.author.id]
+            votes.append((slide[0], slide[1]) if response == 'a' else (slide[1], slide[0]))
             create_new = True
 
         elif ctx.author.id not in self.votes['slides']:
@@ -86,9 +87,9 @@ class Voting:
 
         if create_new:
             responses = []
-            for path in listdir(RESP_DIR):
-                file = join(RESP_DIR, path)
-                if isfile(file):
+            for path in os.listdir(RESP_DIR):
+                file = os.path.join(RESP_DIR, path)
+                if os.path.isfile(file):
                     responses.append((self.get_count(file), file))
 
             responses.sort()
@@ -101,105 +102,81 @@ class Voting:
                     for vote in self.votes['votes'][ctx.author.id]:
                         if a[1] in vote and b[1] in vote:
                             return True
-                    else:
-                        return False
                 except KeyError:
                     self.votes['votes'][ctx.author.id] = []
-                    return False
+                return False
 
             slide = None
-            for x in fewest:
-                for y in fewest:
-                    if x != y and not voted_before(x, y):
-                        slide = (x[1], y[1])
-                        break
-                else:
-                    continue
-                break
-
-            if slide is None:
-                for x in fewest+rest:
-                    for y in fewest+rest:
-                        if x != y and not voted_before(x, y):
-                            slide = (x[1], y[1])
-                            break
-                    else:
-                        continue
+            for x, y in itertools.product(fewest, fewest):
+                if x == y: continue
+                if x != y and not voted_before(x, y):
+                    slide = (x[1], y[1])
                     break
 
             if slide is None:
+                for x, y in itertools.product(fewest + rest, fewest + rest):
+                    if x == y: continue
+                    if x != y and not voted_before(x, y):
+                        slide = (x[1], y[1])
+                        break
+
+            if slide is None:
                 self.votes['slides'][ctx.author.id] = -1
-                return await ctx.send('You\'ve voted on everything, please stop voting.')
+                return await ctx.send('You have voted on everything. Please stop voting.')
 
             self.votes['slides'][ctx.author.id] = slide
 
         def count_lines(lines):
-            try:
-                lines = lines.rstrip('\n').split('\n')
-            except TypeError:
-                lines = lines.rstrip(b'\n').split(b'\n')
-
-            return len(lines)
+            return len(lines.encode().rstrip().split(b'\n'))
 
         slide = self.votes['slides'][ctx.author.id]
-        try:
-            content = open(slide[0], 'r').read()
-        except UnicodeDecodeError:
-            content = open(slide[0], 'rb').read()
-        lang = slide[0].split(".")[-1]
-        d = 'Pick the better one:\n'
-        d += ':regional_indicator_a: '
-        if slide[0] in self.votes['broke']:
-            d += '**Not working** '
-        d += f'{count_lines(content)} line(s)'
-        if len(content) < 1900:
-            d += f'```{lang}\n{content}```\n'
-            await ctx.send(d)
-        else:
+
+        async def send_half(slide_part, code):
+            try:
+                content = open(slide_part, 'r').read()
+            except UnicodeDecodeError:
+                content = open(slide_part, 'rb').read()
+
+            lang = slide_part.split(".")[-1]
+
+            d = f'Pick the better one:\n:regional_indicator_{code}: '
+            if slide_part in self.votes['broke']: d += '**Not working** '
+            d += f'{count_lines(content)} line(s)'
+
+            if len(content) < 1900:
+                d += f'```{lang}\n{content}```\n'
+                return await ctx.send(d)
+
             d += f'```{lang}\n{content[:1850]}```\n'
             await ctx.send(
                 content=f'{d} *Too much content, see attached file*',
-                file=discord.File(open(slide[0], 'rb'), filename=f'a.{lang}')
+                file=discord.File(open(slide_part, 'rb'),
+                                  filename=f'{code}.{lang}')
             )
 
-        try:
-            content = open(slide[1], 'r').read()
-        except UnicodeDecodeError:
-            content = open(slide[1], 'rb').read()
-        lang = slide[1].split(".")[-1]
-        d = ':regional_indicator_b: '
-        if slide[1] in self.votes['broke']:
-            d += '**Not working** '
-        d += f'{count_lines(content)} line(s)'
-        if len(content) < 1900:
-            d += f'```{lang}\n{content}```\n'
-            await ctx.send(d)
-        else:
-            d += f'```{lang}\n{content[:1850]}```\n'
-            await ctx.send(
-                content=f'{d} *Too much content, see attached file*',
-                file=discord.File(open(slide[1], 'rb'), filename=f'b.{lang}')
-            )
-
-    @vote.after_invoke
-    async def save(self, _):
-        with open('votes.yml', 'w') as votes:
-            yaml.dump(self.votes, votes)
+        await send_half(slide[0], 'a')
+        await send_half(slide[1], 'b')
 
     @commands.command()
     @commands.is_owner()
     async def results(self, ctx):
-        """Do results"""
         def get_percentage(response):
             return 100 * sum(response['votes']) / response['count']
 
-        responses = {join(RESP_DIR, path): {
+        def ordinal(num):
+            return ['ˢᵗ', 'ᶮᵈ', 'ʳᵈ', 'ᵗʰ'][3 if num // 10 % 10 == 1 else min(num % 10 - 1, 3)]
+
+        def get_power(vote_count):
+            return 1 / vote_count
+
+        responses = {os.path.join(RESP_DIR, path): {
             'votes': [],
             'count': 0
-        } for path in listdir(RESP_DIR) if isfile(join(RESP_DIR, path))}
+        } for path in os.listdir(RESP_DIR) if os.path.isfile(os.path.join(RESP_DIR, path))}
+
         for votes in self.votes['votes'].values():
             if len(votes) == 0: continue
-            power = 1/len(votes)
+            power = get_power(len(votes))
             for vote in votes:
                 responses[vote[0]]['votes'].append(power)
                 responses[vote[1]]['votes'].append(0)
@@ -212,10 +189,7 @@ class Voting:
 
         responses.sort(key=lambda x: x['percentage'], reverse=True)
         for n, response in enumerate(responses):
-            if (n // 10) % 10 == 1:
-                symbol = SUPERSCRIPT[-1]
-            else:
-                symbol = SUPERSCRIPT[n % 10]
+            symbol = ordinal(n + 1)
 
             dead = n > len(responses) * PERCENTAGE
             try:
@@ -232,16 +206,20 @@ class Voting:
             else:
                 content = f'```{lang}\n{content}```\n'
 
-            msg = '{}\n{} **{}{} place**: {}\n**<@{}>** ({}%)'.format(
-                '=' * 50,
-                ':skull_crossbones:' if (dead and n != 0) else ':white_check_mark:',
-                n + 1, symbol, content,
-                response['response'].split('.')[0].split('/')[-1],
-                round(response['percentage'], 2)
-            )
+            msg = f'{"=" * 50}\n' \
+                  f'{":skull_crossbones:" if (dead and n != 0) else ":white_check_mark:"} ' \
+                  f'**{n+1}{symbol} place**: {content}\n' \
+                  f'**<@{response["response"].split(".")[0].split("/")[-1]}>** ' \
+                  f'({response["percentage"]:.2f}%)'
+
             await ctx.send(msg, file=file)
             with open('results.txt', 'a+') as results_file:
-                results_file.write(msg+'\n\n\n')
+                results_file.write(msg + '\n\n\n')
+
+    @vote.after_invoke
+    async def save(self, _):
+        with open('votes.yml', 'w') as votes:
+            yaml.dump(self.votes, votes)
 
     @commands.command()
     @commands.is_owner()
@@ -280,7 +258,12 @@ class Voting:
             'responses/bin/236257776421175296': '96 LB'
         }
         results = {competitor: 0 for competitor in competitors.values()}
-        competitions = [(a, b) for a in competitors.keys() for b in competitors.keys() if a != b]
+        comps = list(competitors.keys())
+        competitions = [
+            (comps[x], comps[(x+i) % len(comps)])
+            for x in range(len(comps))
+            for i in range(1, len(comps))
+        ]
 
         async def fight(a, b):
             fighters = [a, b]
@@ -288,15 +271,11 @@ class Voting:
             b = shlex.split(b)
             game = MultiplayerAvocado()
             while True:
-                if game.turn == 0:
-                    turn = a
-                else:
-                    turn = b
-
+                turn = a if game.turn == 0 else b
                 proc = Popen(turn + [str(game.spoon)] + list(map(str, game.previous)), stdout=PIPE, stderr=PIPE)
                 out, err = proc.communicate()
                 if err:
-                    await ctx.send(f'{competitors[fighters[game.turn]]} errored!')
+                    await ctx.send(f'{competitors[fighters[game.turn]]} errored! ```{err[:1900]}```')
                     break
 
                 o = f'{competitors[fighters[game.turn]]} outputs `{out.decode("utf-8").strip()}`.'

@@ -8,4 +8,5 @@ results.txt
 votes.yml
 cogs/responses/
 bot_data
+responses
 !bot_data/*.template
