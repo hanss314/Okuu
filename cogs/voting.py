@@ -260,8 +260,8 @@ class Voting:
         comps = list(competitors.keys())
         competitions = [
             (comps[x], comps[(x+i) % len(comps)])
-            for x in range(len(comps))
             for i in range(1, len(comps))
+            for x in range(len(comps))
         ]
 
         async def fight(a, b):
