@@ -190,7 +190,6 @@ class Voting:
         responses.sort(key=lambda x: x['percentage'], reverse=True)
         for n, response in enumerate(responses):
             symbol = ordinal(n + 1)
-
             dead = n > len(responses) * PERCENTAGE
             try:
                 content = open(response['response'], 'r').read()
@@ -254,7 +253,7 @@ class Voting:
             'python3 responses/161508165672763392.py': 'Bottersnike',
             'lua responses/248156896131940354.lua': '_zM',
             'python3 responses/137001076284063744.py': 'Bazinga_9000',
-            'python3 responses/186553034439000064.py':' Milo Jacquet',
+            'python3 responses/186553034439000064.py':'Milo Jacquet',
             'responses/bin/236257776421175296': '96 LB'
         }
         results = {competitor: 0 for competitor in competitors.values()}
