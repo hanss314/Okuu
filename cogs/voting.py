@@ -1,13 +1,7 @@
 import random
 import discord
-import shlex
-import asyncio
-import time
 import os
 import itertools
-
-from .UTTT.avocado import MultiplayerAvocado
-from subprocess import Popen, PIPE
 
 from ruamel import yaml
 from discord.ext import commands
@@ -143,11 +137,12 @@ class Voting:
             if slide_part in self.votes['broke']: d += '**Not working** '
             d += f'{count_lines(content)} line(s)'
 
-            if len(content) < 1900:
+            if len(content) < 1600:
                 d += f'```{lang}\n{content}```\n'
                 return await ctx.send(d)
 
-            d += f'```{lang}\n{content[:1850]}```\n'
+            d += f'```{lang}\n{content[:1600]}```\n'
+            d += f'Docs: {self.votes["docs"].get(slide_part.split("/")[-1].split(".")[0])}'
             await ctx.send(
                 content=f'{d} *Too much content, see attached file*',
                 file=discord.File(open(slide_part, 'rb'),
@@ -236,6 +231,8 @@ class Voting:
             self.bot.get_user(user).name for user in self.votes['slides'] if self.votes['slides'][user] == -1
         ) or 'Nobody')
 
+
+    '''
     @commands.command()
     @commands.is_owner()
     async def fight(self, ctx):
@@ -327,7 +324,7 @@ class Voting:
                 await asyncio.sleep(wait_time)
             else:
                 await ctx.send('The next round starts now!')
-
+    '''
 
 def setup(bot):
     bot.add_cog(Voting(bot))
