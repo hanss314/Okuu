@@ -139,6 +139,7 @@ class Voting:
 
             if len(content) < 1600:
                 d += f'```{lang}\n{content}```\n'
+                d += f'Docs: {self.votes["docs"].get(slide_part.split("/")[-1].split(".")[0])}'
                 return await ctx.send(d)
 
             d += f'```{lang}\n{content[:1600]}```\n'
