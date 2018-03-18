@@ -56,7 +56,7 @@ class Voting:
 
         if ctx.author.id in self.votes['slides'] and self.votes['slides'][ctx.author.id] == -1:
             tlow = self.bot.get_guild(386357756409675776)
-            role = tlow.get_role(394197953033535489)
+            role = discord.utils.find(lambda r: r.id == 394197953033535489, tlow.roles)
             member = tlow.get_member(ctx.author.id)
             try:
                 await member.add_roles(role)
