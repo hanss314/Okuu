@@ -55,6 +55,14 @@ class Voting:
             return await ctx.send('I was expecting the vote to be `a` or `b`')
 
         if ctx.author.id in self.votes['slides'] and self.votes['slides'][ctx.author.id] == -1:
+            tlow = self.bot.get_guild(386357756409675776)
+            role = tlow.get_role(394197953033535489)
+            member = tlow.get_member(ctx.author.id)
+            try:
+                await member.add_roles(role)
+            except (discord.Forbidden, AttributeError):
+                pass
+
             return await ctx.send('You\'ve voted on everything, please stop voting.')
 
         if not isinstance(ctx.channel, discord.abc.PrivateChannel):
