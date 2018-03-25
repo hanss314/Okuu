@@ -215,6 +215,8 @@ class Voting:
                   f'**<@{response["response"].split(".")[0].split("/")[-1]}>** ' \
                   f'({response["percentage"]:.2f}%)'
 
+            if file is not None:
+                print(msg)
             await ctx.send(msg, file=file)
             with open('results.txt', 'a+') as results_file:
                 results_file.write(msg + '\n\n\n')

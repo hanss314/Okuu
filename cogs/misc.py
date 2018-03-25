@@ -121,7 +121,21 @@ class Misc:
 
     @commands.command()
     async def dab(self, ctx):
+        """Dab at the haters"""
         await ctx.send('<:nueDab:404506021114150922>')
+
+    @commands.command()
+    @commands.has_permissions(ban_members=True)
+    async def hackban(self, ctx, user_id: int, *, reason=''):
+        """Ban a user by ID"""
+        user = discord.Object(user_id)
+        try:
+            await ctx.guild.ban(user, reason=reason)
+            await ctx.send(f'Banned <@{user_id}>')
+        except discord.Forbidden:
+            await ctx.send('I do not have permissions.')
+        except discord.HTTPException:
+            await ctx.send('Banning failed, did you type the id correctly?')
 
     @commands.command(aliases=['tatsukete_eirin', 'eirin'])
     async def help(self, ctx, *args):
