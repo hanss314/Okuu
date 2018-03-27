@@ -98,7 +98,7 @@ rpncalc = {
     'chr': ('Converts the top item of the stack to a utf-8 character', lambda l, v: l.append(chr(l.pop()))),
     'str': (
         'Converts the top element to its string representation. The string representation of `"a"` is `"\'a\'"`',
-        lambda l, v: l.append(chr(l.pop()))
+        lambda l, v: l.append(to_str(l.pop()))
     ),
     'S': (
         'Pushes a string to stack. `S` will push an empty string, `Sabc` pushes the string `"abc"`, '
