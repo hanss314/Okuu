@@ -11,6 +11,10 @@ from discord.ext import commands
 class Utils:
 
     def __init__(self, bot):
+        import importlib
+        from .util import rpn
+        importlib.reload(rpn)
+        importlib.reload(touhouwiki)
         self.bot = bot
         if not path.isfile('bot_data/stacks.yml'):
             with open('bot_data/stacks.yml', 'w+') as flairs:

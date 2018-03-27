@@ -44,6 +44,26 @@ rpncalc = {
         lambda l, v: l.append(math.log(l.pop(), l.pop()))
     ),
 
+    # bitwise operators
+    '&': ('Bitwise AND', lambda l, v: l.append(l.pop() & l.pop())),
+    '|': ('Bitwise OR', lambda l, v: l.append(l.pop() | l.pop())),
+    '^|': ('Bitwise XOR', lambda l, v: l.append(l.pop() ^ l.pop())),
+    '!': ('Bitwise complement', lambda l, v: l.append(~l.pop())),
+    '~': ('Bitwise complement', lambda l, v: l.append(~l.pop())),
+    '<<': ('Pop two numbers, bitshift first left by second', lambda l, v: l.append(l.pop() << l.pop())),
+    '>>': ('Pop two numbers, bitshift first right by second', lambda l, v: l.append(l.pop() >> l.pop())),
+
+    # logical operators
+    '==': ('Pushes `1` if top two equal, else `0`', lambda l, v: l.append(int(l.pop() == l.pop()))),
+    '!=': ('Pushes `1` if top two inequal, else `0`', lambda l, v: l.append(int(l.pop() != l.pop()))),
+    '<=': ('Pushes `1` if top less than or equal to second, else `0`', lambda l, v: l.append(int(l.pop() <= l.pop()))),
+    '<': ('Pushes `1` if top less than second, else `0`', lambda l, v: l.append(int(l.pop() < l.pop()))),
+    '>': ('Pushes `1` if top greater than second, else `0`', lambda l, v: l.append(int(l.pop() > l.pop()))),
+    '>=': (
+        'Pushes `1` if top greater than or equal to second, else `0`',
+        lambda l, v: l.append(int(l.pop() <= l.pop()))
+    ),
+
     # misc
     'ceil': ('Ceiling function', lambda l, v: l.append(math.ceil(l.pop()))),
     'flr': ('Ceiling function', lambda l, v: l.append(math.floor(l.pop()))),
@@ -76,6 +96,10 @@ rpncalc = {
 
     # strings
     'chr': ('Converts the top item of the stack to a utf-8 character', lambda l, v: l.append(chr(l.pop()))),
+    'str': (
+        'Converts the top element to its string representation. The string representation of `"a"` is `"\'a\'"`',
+        lambda l, v: l.append(chr(l.pop()))
+    ),
     'S': (
         'Pushes a string to stack. `S` will push an empty string, `Sabc` pushes the string `"abc"`, '
         '`SS` pushes the string `"S"`, `S1` pushes the string `"1"`',
