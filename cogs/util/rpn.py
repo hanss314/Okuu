@@ -146,7 +146,7 @@ def std_str(string) -> str:
     if string.startswith('S'):
         return string[1:]
     else:
-        return str(string)
+        raise ValueError
 
 
 conv_list = [
