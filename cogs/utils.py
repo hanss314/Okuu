@@ -91,6 +91,7 @@ class Utils:
 
     @rpn.before_invoke
     @show_stack.before_invoke
+    @show_variables
     async def check_exists(self, ctx):
         if ctx.author.id not in self.stacks:
             self.stacks[ctx.author.id] = ([], {})
