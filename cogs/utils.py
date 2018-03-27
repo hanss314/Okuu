@@ -63,7 +63,7 @@ class Utils:
                 f'Available operations: ```{", ".join(x for x in rpncalc.keys())}```\n'
                 'All other operations will attempt to evaluate the operator in the order '
                 '`int, float, complex, string` and push the value to the stack. '
-                f'See `{ctx.prefix}rpn help S` for help on strings, '
+                f'See `{ctx.prefix}rpn help \'` for help on strings, '
                 f'and `{ctx.prefix}rpn help <op>` for help on an operator.'
             )
 

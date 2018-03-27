@@ -100,9 +100,9 @@ rpncalc = {
         'Converts the top element to its string representation. The string representation of `"a"` is `"\'a\'"`',
         lambda l, v: l.append(to_str(l.pop()))
     ),
-    'S': (
-        'Pushes a string to stack. `S` will push an empty string, `Sabc` pushes the string `"abc"`, '
-        '`SS` pushes the string `"S"`, `S1` pushes the string `"1"`',
+    "'": (
+        "Pushes a string to stack. `'` will push an empty string, `'abc` pushes the string `'abc'`, "
+        "`''` pushes the string `\"'\"`, `'1` pushes the string `'1'`",
         lambda l, v: l.append('')
     ),
 
@@ -147,7 +147,7 @@ def std_complex(string) -> complex:
 
 
 def std_str(string) -> str:
-    if string.startswith('S'):
+    if string.startswith("'"):
         return string[1:]
     else:
         raise ValueError
