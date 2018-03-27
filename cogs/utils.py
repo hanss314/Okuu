@@ -1,96 +1,11 @@
 import asyncio
-import math
-import statistics
 import discord
 
 from os import path
 from ruamel import yaml
-from string import ascii_letters
 from .util import sudoku, comp_parser, touhouwiki
+from .util.rpn import rpncalc, convert, to_str
 from discord.ext import commands
-
-acceptable = ascii_letters + '0123456789'
-
-rpncalc = {
-    # constants
-    'pi': lambda l: [math.pi] + l,
-    'e': lambda l: [math.e] + l,
-
-    # arithmetic
-    '+': lambda l: [l[1]+l[0]] + l[2:],
-    '-': lambda l: [l[1]-l[0]] + l[2:],
-    '*': lambda l: [l[1]*l[0]] + l[2:],
-    '/': lambda l: [l[1]/l[0]] + l[2:],
-    '^': lambda l: [l[1]**l[0]] + l[2:],
-    '**': lambda l: [l[1]**l[0]] + l[2:],
-    'sqrt': lambda l: [l[0]**0.5] + l[2:],
-
-    # trig
-    'sin': lambda l: [math.sin(l[0])] + l[1:],
-    'cos': lambda l: [math.cos(l[0])] + l[1:],
-    'tan': lambda l: [math.tan(l[0])] + l[1:],
-    'asin': lambda l: [math.asin(l[0])] + l[1:],
-    'acos': lambda l: [math.acos(l[0])] + l[1:],
-    'atan': lambda l: [math.atan(l[0])] + l[1:],
-
-    # hyperbolic
-    'sinh': lambda l: [math.sinh(l[0])] + l[1:],
-    'cosh': lambda l: [math.cosh(l[0])] + l[1:],
-    'tanh': lambda l: [math.tanh(l[0])] + l[1:],
-    'asinh': lambda l: [math.asinh(l[0])] + l[1:],
-    'acosh': lambda l: [math.acosh(l[0])] + l[1:],
-    'atanh': lambda l: [math.atanh(l[0])] + l[1:],
-
-    # logs
-    'ln': lambda l: [math.log(l[0])] + l[1:],
-    'log': lambda l: [math.log10(l[0])] + l[1:],
-    'logb': lambda l: [math.log(l[0], l[1])] + l[2:],
-
-    # misc
-    'ceil': lambda l: [math.ceil(l[0])] + l[1:],
-    'flr': lambda l: [math.floor(l[0])] + l[1:],
-
-    # statistics
-    'meana': lambda l: [statistics.mean(l)],
-    'stdva': lambda l: [statistics.stdev(l)],
-    'mean': lambda l: [statistics.mean(l[1: l[0]+1])] + l[l[0]+1:],
-    'stdv': lambda l: [statistics.stdev(l[1: l[0]+1])] + l[l[0]+1:],
-    'meanstdva': lambda l: [statistics.mean(l), statistics.stdev(l)],
-    'meanstdv': lambda l: [
-                              statistics.mean(l[1: l[0]+1]),
-                              statistics.stdev(l[1: l[0]+1])
-                          ] + l[l[0]+1:],
-
-    # stack operations
-    'swp': lambda l: [l[1], l[0]] + l[2:],
-    'drp': lambda l: l[1:],
-    'dup': lambda l: [l[0]] + l,
-    'clr': lambda l: [],
-}
-
-
-def std_complex(string) -> complex:
-    try:
-        return complex(string)
-    except ValueError:
-        return complex(string.replace('i', 'j'))
-
-
-conv_list = [
-    int,
-    float,
-    std_complex,
-]
-
-
-def convert(string):
-    for func in conv_list:
-        try:
-            return func(string)
-        except ValueError:
-            pass
-
-    raise ValueError
 
 
 class Utils:
@@ -109,13 +24,13 @@ class Utils:
     @commands.group(invoke_without_command=True)
     async def rpn(self, ctx, *ops):
         """Use an RPN calculator"""
-        stack = self.stacks[ctx.author.id]
+        stack, var = self.stacks[ctx.author.id]
         loop = asyncio.get_event_loop()
         for n, op in enumerate(ops):
             if op in rpncalc:
                 try:
-                    stack = await asyncio.wait_for(
-                        loop.run_in_executor(None, rpncalc[op], stack), 1
+                    await asyncio.wait_for(
+                        loop.run_in_executor(None, rpncalc[op][1], stack, var), 1
                     )
                 except asyncio.TimeoutError:
                     return await ctx.send(f'Operation {n+1}: `{op}` timed out. Aborting.')
@@ -126,35 +41,66 @@ class Utils:
 
             else:
                 try:
-                    stack = [convert(op)] + stack
+                    stack.append(convert(op))
                 except ValueError:
                     return await ctx.send(f'Invalid value or operation: `{op}`. Aborting')
 
-        self.stacks[ctx.author.id] = stack[:16]
+        while len(var) > 16:
+            var.popitem()
+
+        self.stacks[ctx.author.id] = (stack[-16:], var)
         await ctx.invoke(self.show_stack)
 
     @rpn.command(name='help')
-    async def rpn_help(self, ctx):
+    async def rpn_help(self, ctx, op=None):
         """Get a list of all operations"""
-        await ctx.send(f'Available operations: {", ".join(x for x in rpncalc.keys())}')
+        if op is None:
+            await ctx.send(
+                f'Available operations: ```{", ".join(x for x in rpncalc.keys())}```\n'
+                'All other operations will attempt to evaluate the operator in the order '
+                '`int, float, complex, string` and push the value to the stack. '
+                f'See `{ctx.prefix}rpn help S` for help on strings, '
+                f'and `{ctx.prefix}rpn help <op>` for help on an operator.'
+            )
+
+        else:
+            help_text = rpncalc.get(op)
+            if help_text is None:
+                return await ctx.send('Unyu? That\'s not an operator')
+
+            help_text = help_text[0]
+            await ctx.send(f'Help for `{op}`: \n\n{help_text}')
 
     @rpn.command(name='stack')
     async def show_stack(self, ctx):
         """View your stack"""
-        if len(self.stacks[ctx.author.id]) == 0:
+        if len(self.stacks[ctx.author.id][0]) == 0:
             return await ctx.send('Your stack is empty.')
 
-        await ctx.send(', '.join(str(x) for x in self.stacks[ctx.author.id]).replace('j', 'i'))
+        await ctx.send(', '.join(to_str(x) for x in self.stacks[ctx.author.id][0]))
+
+    @rpn.command(name='variables', aliases=['vars'])
+    async def show_variables(self, ctx):
+        """View your stack"""
+        if len(self.stacks[ctx.author.id][1]) == 0:
+            return await ctx.send('You have no defined variables.')
+
+        await ctx.send('; '.join(
+            f'{to_str(k)} = {to_str(v)}' for k, v in self.stacks[ctx.author.id][1].items()
+        ))
 
     @rpn.before_invoke
     @show_stack.before_invoke
     async def check_exists(self, ctx):
         if ctx.author.id not in self.stacks:
-            self.stacks[ctx.author.id] = []
+            self.stacks[ctx.author.id] = ([], {})
+
+        elif type(self.stacks[ctx.author.id]) == list:
+            self.stacks[ctx.author.id] = (self.stacks[ctx.author.id], {})
 
     @rpn.after_invoke
     async def save_stack(self, _):
-        with open('stacks.yml', 'w') as stacks:
+        with open('bot_data/stacks.yml', 'w') as stacks:
             yaml.dump(self.stacks, stacks)
 
     @commands.command()
