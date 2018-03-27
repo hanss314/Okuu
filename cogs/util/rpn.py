@@ -128,6 +128,10 @@ rpncalc = {
         'Pops a value and pushes the value bound to that variable. See the `set` operator for help on variable names.',
         lambda l, v: l.append(v[l.pop()])
     ),
+    'unset': (
+        'Removes a variable.',
+        lambda l, v: v.pop(l.pop())
+    ),
     'clrv': ('Clear all variables', lambda l, v: v.clear()),
 
     'clra': ('Clear the stack and variables', lambda l, v: (v.clear(), l.clear())),
