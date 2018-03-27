@@ -131,6 +131,7 @@ rpncalc = {
     'clrv': ('Clear all variables', lambda l, v: v.clear()),
 
     'clra': ('Clear the stack and variables', lambda l, v: (v.clear(), l.clear())),
+    'clr': ('Clear the stack and variables', lambda l, v: (v.clear(), l.clear())),
 }
 
 
