@@ -170,6 +170,6 @@ def convert(string):
 def to_str(value):
     out = repr(value)
     if isinstance(value, complex):
-        out.replace('j', 'i')
+        out = out.replace('j', 'i')
 
     return out
