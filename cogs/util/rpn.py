@@ -126,6 +126,10 @@ rpncalc = {
         'then adds the new stack to the original stack. This is safer than `veval`',
         lambda l, v: l.extend(eval_rpn(v[l.pop()], [], v))
     ),
+    'cond': (
+        'Pop 3 values, if the top value is an empty string or `0`, push the third, else push the second',
+        lambda l, v: l.append((lambda i, c: c[i-1])(bool(l.pop()), (l.pop(), l.pop())))
+    ),
 
     # stack operations
     'swp': ('Swap the  top two items of the stack.', lambda l, v: l.extend([l.pop(), l.pop()])),
