@@ -43,14 +43,12 @@ class Utils:
                 except IndexError:
                     return await ctx.send(f'Stack size too small on operation {n+1}: `{op}`. Aborting')
                 except Exception as e:
-                    await asyncio.sleep(1)
                     if len(e.args[0]) > 500:
                         m = ctx.send(f'`{e.args[0][:500]}...` [Error truncated due to length], aborting.')
                     else:
                         m = ctx.send(f'`{e}`, aborting.')
                     loop.create_task(m)
                     return
-
 
             else:
                 try:
