@@ -49,17 +49,20 @@ rpncalc = {
     '^|': ('Bitwise XOR', lambda l, v: l.append(l.pop() ^ l.pop())),
     '!': ('Bitwise complement', lambda l, v: l.append(~l.pop())),
     '~': ('Bitwise complement', lambda l, v: l.append(~l.pop())),
-    '<<': ('Pop two numbers, bitshift first left by second', lambda l, v: l.append(l.pop() << l.pop())),
-    '>>': ('Pop two numbers, bitshift first right by second', lambda l, v: l.append(l.pop() >> l.pop())),
+    '<<': ('Pop two numbers, bitshift second left by first', lambda l, v: l.append(l.pop(-2) << l.pop())),
+    '>>': ('Pop two numbers, bitshift second right by first', lambda l, v: l.append(l.pop(-2) >> l.pop())),
 
     # logical operators
     '==': ('Pushes `1` if top two equal, else `0`', lambda l, v: l.append(int(l.pop() == l.pop()))),
     '!=': ('Pushes `1` if top two inequal, else `0`', lambda l, v: l.append(int(l.pop() != l.pop()))),
-    '<=': ('Pushes `1` if top less than or equal to second, else `0`', lambda l, v: l.append(int(l.pop() <= l.pop()))),
-    '<': ('Pushes `1` if top less than second, else `0`', lambda l, v: l.append(int(l.pop() < l.pop()))),
-    '>': ('Pushes `1` if top greater than second, else `0`', lambda l, v: l.append(int(l.pop() > l.pop()))),
+    '<=': (
+        'Pushes `1` if second less than or equal to top, else `0`',
+        lambda l, v: l.append(int(l.pop(-2) <= l.pop()))
+    ),
+    '<': ('Pushes `1` if second less than top, else `0`', lambda l, v: l.append(int(l.pop(-2) < l.pop()))),
+    '>': ('Pushes `1` if second greater than top, else `0`', lambda l, v: l.append(int(l.pop(-2) > l.pop()))),
     '>=': (
-        'Pushes `1` if top greater than or equal to second, else `0`',
+        'Pushes `1` if second greater than or equal to top, else `0`',
         lambda l, v: l.append(int(l.pop() <= l.pop()))
     ),
 
