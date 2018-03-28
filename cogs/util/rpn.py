@@ -19,6 +19,7 @@ rpncalc = {
     ),
     '^': ('Pops two numbers, pushes the first to the power of the second', lambda l, v: l.append(l.pop() ** l.pop())),
     '**': ('Pops two numbers, pushes the first to the power of the second', lambda l, v: l.append(l.pop() ** l.pop())),
+    '%': ('Pops two numbers, pushes the first modulo\'d by the second', lambda l, v: l.append(l.pop() % l.pop())),
     'sqrt': ('Pops one number, pushes its square root', lambda l, v: l.append(l.pop() ** 0.5)),
 
     # trig
