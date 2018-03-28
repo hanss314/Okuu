@@ -30,7 +30,6 @@ class CodeNamesBot(commands.Bot):
             **kwargs
         )
 
-
     async def on_message(self, message):
         if not message.author.bot:
             await self.process_commands(message)
@@ -48,9 +47,12 @@ class CodeNamesBot(commands.Bot):
                     return
 
             # Print to log then notify developers
-            lines = traceback.format_exception(type(exception),
-                                               exception,
-                                               exception.__traceback__)
+            try:
+                lines = traceback.format_exception(type(exception),
+                                                   exception,
+                                                   exception.__traceback__)
+            except RecursionError:
+                raise exception
 
             self.logger.error(''.join(lines))
 

@@ -34,15 +34,23 @@ class Utils:
         for n, op in enumerate(ops):
             if op in rpncalc:
                 try:
-                    await asyncio.wait_for(
+                    task = asyncio.wait_for(
                         loop.run_in_executor(None, rpncalc[op][1], stack, var), 1
                     )
+                    await task
                 except asyncio.TimeoutError:
                     return await ctx.send(f'Operation {n+1}: `{op}` timed out. Aborting.')
                 except IndexError:
                     return await ctx.send(f'Stack size too small on operation {n+1}: `{op}`. Aborting')
                 except Exception as e:
-                    return await ctx.send(f'{e}, aborting.')
+                    await asyncio.sleep(1)
+                    if len(e.args[0]) > 500:
+                        m = ctx.send(f'`{e.args[0][:500]}...` [Error truncated due to length], aborting.')
+                    else:
+                        m = ctx.send(f'`{e}`, aborting.')
+                    loop.create_task(m)
+                    return
+
 
             else:
                 try:
