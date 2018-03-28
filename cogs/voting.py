@@ -27,6 +27,9 @@ class Voting:
 
         self.can_vote = False
 
+    def __local_check(self, ctx):
+        return self.bot.get_guild(386357756409675776).get_member(ctx.author.id) is not None
+
     def get_count(self, filename):
         acc = 0
         for vote in self.votes['votes'].values():
