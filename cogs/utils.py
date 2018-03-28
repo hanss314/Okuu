@@ -29,6 +29,7 @@ class Utils:
     async def rpn(self, ctx, *ops):
         """Use an RPN calculator"""
         stack, var = self.stacks[ctx.author.id]
+        stack, var = list(stack), dict(var)
         loop = asyncio.get_event_loop()
         for n, op in enumerate(ops):
             if op in rpncalc:
