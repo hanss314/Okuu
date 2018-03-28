@@ -44,7 +44,16 @@ class CodeNamesBot(commands.Bot):
                     await ctx.send('Permissions error: `{}`'.format(exception))
                 except discord.Forbidden:
                     # we can't send messages in that channel
-                    return
+                    pass
+                return
+
+            elif isinstance(exception.original, discord.HTTPException):
+                try:
+                    await ctx.send('Unyu? I can\'t send that.')
+                except discord.Forbidden:
+                    pass
+
+                return
 
             # Print to log then notify developers
             try:
