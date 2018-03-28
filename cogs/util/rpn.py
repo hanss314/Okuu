@@ -9,17 +9,14 @@ rpncalc = {
     'e': ('Pushes euler\'s constant', lambda l, v: l.append(math.e)),
 
     # arithmetic
-    '+': ('Pops two numbers, pushes the sum', lambda l, v: l.append(l.pop() + l.pop())),
-    '-': ('Pops two numbers, pushes the first minus the second.', lambda l, v: l.append(l.pop() - l.pop())),
-    '*': ('Pops two numbers, pushes the product', lambda l, v: l.append(l.pop() * l.pop())),
-    '/': ('Pops two numbers, pushes the first divided by the second', lambda l, v: l.append(l.pop() / l.pop())),
-    '//': (
-        'Pops two numbers, pushes the first divided by the second, rounded down',
-        lambda l, v: l.append(l.pop() // l.pop())
-    ),
-    '^': ('Pops two numbers, pushes the first to the power of the second', lambda l, v: l.append(l.pop() ** l.pop())),
-    '**': ('Pops two numbers, pushes the first to the power of the second', lambda l, v: l.append(l.pop() ** l.pop())),
-    '%': ('Pops two numbers, pushes the first modulo\'d by the second', lambda l, v: l.append(l.pop() % l.pop())),
+    '+': ('Sum of two numbers', lambda l, v: l.append(l.pop(-2) + l.pop())),
+    '-': ('Difference of two numbers', lambda l, v: l.append(l.pop(-2) - l.pop())),
+    '*': ('Multiply two numbers', lambda l, v: l.append(l.pop(-2) * l.pop())),
+    '/': ('Divide two numbers', lambda l, v: l.append(l.pop(-2) / l.pop())),
+    '//': ('Division, rounded down', lambda l, v: l.append(l.pop(-2) // l.pop())),
+    '^': ('Exponentiation', lambda l, v: l.append(math.pow(l.pop(-2), l.pop()))),
+    '**': ('Exponentiation', lambda l, v: l.append(math.pow(l.pop(-2), l.pop()))),
+    '%': ('Modulo second on stack by first', lambda l, v: l.append(l.pop(-2) % l.pop())),
     'sqrt': ('Pops one number, pushes its square root', lambda l, v: l.append(l.pop() ** 0.5)),
 
     # trig
