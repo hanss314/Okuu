@@ -1,5 +1,6 @@
 import math
 import statistics
+import shlex
 
 
 rpncalc = {
@@ -64,7 +65,7 @@ rpncalc = {
         lambda l, v: l.append(int(l.pop() <= l.pop()))
     ),
 
-    # misc
+    # misc math
     'ceil': ('Ceiling function', lambda l, v: l.append(math.ceil(l.pop()))),
     'flr': ('Ceiling function', lambda l, v: l.append(math.floor(l.pop()))),
 
@@ -106,6 +107,26 @@ rpncalc = {
         lambda l, v: l.append('')
     ),
 
+    # meta
+    'eval': (
+        'Evaluate the top of the stack as an expression.',
+        lambda l, v: eval_rpn(l.pop(), l, v)
+    ),
+    'veval': (
+        'Evaluate the variable at the top of the stack',
+        lambda l, v: eval_rpn(v[l.pop()], l, v)
+    ),
+    'evals': (
+        'Evaluate the top of the stack as an expression, using an empty stack, '
+        'then adds the new stack to the original stack. This is safer than `eval`',
+        lambda l, v: l.extend(eval_rpn(l.pop(), [], v))
+    ),
+    'vevals': (
+        'Evaluate the variable at the top of the stack, using an empty stack, '
+        'then adds the new stack to the original stack. This is safer than `veval`',
+        lambda l, v: l.extend(eval_rpn(v[l.pop()], [], v))
+    ),
+
     # stack operations
     'swp': ('Swap the  top two items of the stack.', lambda l, v: l.extend([l.pop(), l.pop()])),
     'drp': ('Drop the top item of the stack', lambda l, v: l.pop()),
@@ -137,6 +158,28 @@ rpncalc = {
     'clra': ('Clear the stack and variables', lambda l, v: (v.clear(), l.clear())),
     'clr': ('Clear the stack and variables', lambda l, v: (v.clear(), l.clear())),
 }
+
+
+def eval_rpn(expression, stack, heap):
+    s = shlex.shlex(expression)
+    s.quotes = '"'
+    s.whitespace_split = True
+    for n, op in enumerate(list(s)):
+        if op in rpncalc:
+            try:
+                rpncalc[op][1](stack, heap)
+            except IndexError:
+                raise RuntimeError(f'Stack size too small on operation {n+1}: `{op}`')
+            except Exception as e:
+                raise RuntimeError(f'{e}, on operation {n+1}')
+
+        else:
+            try:
+                stack.append(convert(op))
+            except ValueError:
+                raise RuntimeError(f'Invalid value or operation: `{op}` on operation {n+1}')
+
+    return stack
 
 
 def std_complex(string) -> complex:
