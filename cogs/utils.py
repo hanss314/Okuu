@@ -49,10 +49,10 @@ class Utils:
                 except ValueError:
                     return await ctx.send(f'Invalid value or operation: `{op}`. Aborting')
 
-        while len(var) > 16:
+        while len(var) > 64:
             var.popitem()
 
-        self.stacks[ctx.author.id] = (stack[-16:], var)
+        self.stacks[ctx.author.id] = (stack[-256:], var)
         await ctx.invoke(self.show_stack)
 
     @rpn.command(name='help')
