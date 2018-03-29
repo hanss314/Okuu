@@ -69,6 +69,7 @@ rpncalc = {
     # misc math
     'ceil': ('Ceiling function', lambda l, v: l.append(math.ceil(l.pop()))),
     'flr': ('Ceiling function', lambda l, v: l.append(math.floor(l.pop()))),
+    'abs': ('Absolute value', lambda l, v: l.append(abs(l.pop()))),
 
     # statistics
     'meana': ('Pushes mean of entire stack. Keeps stack', lambda l, v: l.append(statistics.mean(l))),
