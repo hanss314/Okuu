@@ -150,11 +150,9 @@ class Voting:
 
             if len(content) < 1600:
                 d += f'```{lang}\n{content}```\n'
-                d += f'Language: <{self.votes["docs"].get(slide_part.split("/")[-1].split(".")[0])}>'
                 return await ctx.send(d)
 
             d += f'```{lang}\n{content[:1600]}```\n'
-            d += f'Language: <{self.votes["docs"].get(slide_part.split("/")[-1].split(".")[0])}>'
             await ctx.send(
                 content=f'{d} *Too much content, see attached file*',
                 file=discord.File(open(slide_part, 'rb'),
