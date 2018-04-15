@@ -63,8 +63,8 @@ class Voting:
             member = tlow.get_member(ctx.author.id)
             try:
                 await member.add_roles(role)
-            except (discord.Forbidden, AttributeError):
-                pass
+            except (discord.Forbidden, AttributeError) as e:
+                print(e)
 
             return await ctx.send('You\'ve voted on everything, please stop voting.')
 
@@ -127,6 +127,13 @@ class Voting:
 
             if slide is None:
                 self.votes['slides'][ctx.author.id] = -1
+                tlow = self.bot.get_guild(386357756409675776)
+                role = discord.utils.find(lambda r: r.id == 394197953033535489, tlow.roles)
+                member = tlow.get_member(ctx.author.id)
+                try:
+                    await member.add_roles(role)
+                except (discord.Forbidden, AttributeError) as e:
+                    print(e)
                 return await ctx.send('You have voted on everything. Please stop voting.')
 
             self.votes['slides'][ctx.author.id] = slide
