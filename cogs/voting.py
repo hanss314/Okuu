@@ -3,6 +3,7 @@ import discord
 import os
 import itertools
 
+from statistics import mean, stdev
 from ruamel import yaml
 from discord.ext import commands
 
@@ -181,23 +182,31 @@ class Voting:
         def get_power(vote_count):
             return 1 / vote_count
 
-        responses = {os.path.join(RESP_DIR, path): {
-            'votes': [],
-            'count': 0
-        } for path in os.listdir(RESP_DIR) if os.path.isfile(os.path.join(RESP_DIR, path))}
+        responses = {
+            os.path.join(RESP_DIR, path): [[], 0]
+            for path in os.listdir(RESP_DIR) if os.path.isfile(os.path.join(RESP_DIR, path))
+        }
 
         for votes in self.votes['votes'].values():
             if len(votes) == 0: continue
-            power = get_power(len(votes))
+            choices = {r: [] for r in responses}
             for vote in votes:
-                responses[vote[0]]['votes'].append(power)
-                responses[vote[1]]['votes'].append(0)
-                responses[vote[0]]['count'] += power
-                responses[vote[1]]['count'] += power
+                choices[vote[0]].append(1)
+                choices[vote[1]].append(0)
 
-        responses = [{'response': response, **votes} for response, votes in responses.items()]
-        for entry in responses:
-            entry['percentage'] = get_percentage(entry)
+            for r, v in choices.items():
+                if len(v) == 0: continue
+                responses[r][0].append(mean(v))
+                responses[r][1] += len(v)
+
+        responses = [{
+                'responder': r[0],
+                'response': responses[r],
+                'percentage': mean(p[0]) * 100,
+                'stdev': stdev(p[0]),
+                'votes': p[1]
+            } for r, p in responses.items()
+        ]
 
         responses.sort(key=lambda x: x['percentage'], reverse=True)
         for n, response in enumerate(responses):
