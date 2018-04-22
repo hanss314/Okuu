@@ -4,6 +4,8 @@ import json
 import aiohttp
 import asyncio
 
+
+BASE = 'https://en.touhouwiki.net/wiki/'
 touhouwiki = mwclient.Site('en.touhouwiki.net/', path='')
 
 GAME_ABBREVS = {
@@ -56,9 +58,9 @@ def abbrev_stage(link, _):
     link['s'] = f'Spell Cards/{STAGE_ABBREVS[link["s"]]}'
 
 
-@stage_name(lambda link, name: link['s'] == name)
+@stage_name(lambda link, name: link['s'] == name or link['g'] in ('IaMP', 'UNL', 'ULiL', 'SWR'))
 def character_stage(link, name):
-    link['s'] = f'Spell Cards/{name}'
+    link['s'] = f'Spell Cards/{link["s"]}'
 
 
 @stage_name(lambda link, name: link['g'] in ('DS', 'StB'))
@@ -155,7 +157,7 @@ def sort_entry(name, entry):
             page_entries = re.findall(r'{{Spell Card Info(.*?)\n}}', page, re.DOTALL)
             page_entries = [
                 [
-                    value.split('=') for value in page_entry.split('\n|')
+                    value.split('=', 1) for value in page_entry.split('\n|')
                 ] for page_entry in page_entries
             ]
             page_entries = [
@@ -167,7 +169,30 @@ def sort_entry(name, entry):
                 page_entry['transname'] = re.sub(r'<ref>.*?</ref>', '', page_entry['transname'])
                 page_entry['image'] = page_entry['image'].split('<br />')[0]
                 if 'comment' in page_entry:
+                    spell_links = re.findall(
+                        r'(?:{{SC\|g=(.+?)\|s=(.+?)\|n=(.+?)(?:\|m=.+?)?}})|(?:\[\[(.+?)\|IN\]\])',
+                        page_entry['comment']
+                    )
+                    while spell_links:
+                        spell = spell_links.pop(0)
+                        if spell[-1]: spell_link = f'[IN]({BASE+spell[-1]})'
+                        else:
+                            data = {'g': spell[0], 's': spell[1]}
+                            for rule in STAGE_NAMES:
+                                if rule[0](data, ''):
+                                    rule[1](data, '')
+                                    break
+
+                            spell_link = f'[{spell[0]}]({BASE}{GAME_ABBREVS[spell[0]]}/' \
+                                         f'{data["s"]}#Spell Card {spell[2]})'
+
+                        page_entry['comment'] = re.sub(
+                            r'({{.+?}})|(\[\[.+?\]\])', spell_link.replace(' ', '_'),
+                            page_entry['comment'], count=1
+                        )
+
                     page_entry['comment'] = page_entry['comment'].replace('<br />', '\n')
+
                 if page_entry['image'].startswith('[[') and page_entry['image'].endswith(']]'):
                     page_entry['image'] = page_entry['image'][2:-2].split('|')
 
@@ -230,8 +255,5 @@ async def get_image_url(image):
             return f'https://en.touhouwiki.net{page}'
 
 
-
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_thumbnail('Utsuho Reiuji'))
-    loop.close()
+    spellcards = get_spellcards(cached=True)
