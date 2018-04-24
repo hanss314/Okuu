@@ -161,7 +161,7 @@ def sort_entry(name, entry):
                         notes[0].replace('• ', ''): notes[-1],
                         level[0].replace('• ', ''): level[-1]
                     }
-                    comment = '\n'.join(rows[4:])
+                    comment = '\n'.join(re.sub(r'&\S+;', '', r) for r in rows[4:])
                     page_spells[spellname] = {
                         'comment': comment,
                         'game': game,
