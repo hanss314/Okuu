@@ -169,11 +169,11 @@ class Utils:
         fig, ax = plt.subplots()
         ax.set_axis_off()
         fig.patch.set_visible(False)
-        fig.text(0.0, 0.0, r'\[ ' + text + ' \]', fontsize=14)
+        fig.text(0, 0, r'\[ ' + text + r' \]', fontsize=14)
         try:
-            fig.savefig('latex.png', transparency=True)
-        except RuntimeError:
-            return await ctx.send('Unyu? That doesn\'t look right.')
+            fig.savefig('latex.png')
+        except RuntimeError as e:
+            return await ctx.send(f'Unyu? That doesn\'t look right.')
         image = Image.open('latex.png')
         thresholded = [(0, ) * 4 if item[3] == 0 else item for item in image.getdata()]
         image.putdata(thresholded)
