@@ -194,7 +194,7 @@ def sort_entry(name, entry):
                     if comment: comment = comment.group(1)
                     else: comment = ''
 
-                    comment = re.sub(r'<a.*?href="(.+?)>(.+?)</a>"', r'[\2](\1)', comment)
+                    comment = re.sub(r'<a.*?href="(.+?)".*?>(.+?)</a>', f'[\\2]({BASE}\\1)', comment)
                     comment = re.sub(r'<.+?>', '', comment)
                     page_spells[sc] = {
                         'comment': comment,
