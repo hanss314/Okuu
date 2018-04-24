@@ -178,7 +178,7 @@ class Utils:
     @commands.command()
     async def spellcard(self, ctx, *search_params: lambda s: s.lower()):
         """
-        Search for a spellcard
+        Search for a touhou spellcard
 
         Search options:
             `--user <user>` - Find spellcards by character
@@ -278,15 +278,20 @@ class Utils:
                 name=entry['owner'],
                 url=f'https://en.touhouwiki.net/wiki/{entry["owner"].replace(" ", "_")}'
             )
-
-            embed.set_thumbnail(url=await touhouwiki.get_thumbnail(entry['owner']))
+            thumb = await touhouwiki.get_thumbnail(entry['owner'])
+            embed.set_thumbnail(url=thumb)
             if len(search) == 1:
                 appearance = search[0]
+                if 'others' in appearance:
+                    for field, value in appearance['others'].items():
+                        embed.add_field(name=field or 'Notes', value=value, inline=True)
+
                 if 'comment' in appearance and appearance['comment']:
                     embed.add_field(name='Comment', value=appearance['comment'])
+
                 try:
-                    embed.set_image(url=await touhouwiki.get_image_url(appearance['image']))
-                except AttributeError:
+                    embed.set_image(url=appearance['image'])
+                except KeyError:
                     pass
 
                 embed.set_footer(

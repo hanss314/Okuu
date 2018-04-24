@@ -1,12 +1,38 @@
 import re
-import mwclient
 import json
 import aiohttp
-import asyncio
+import requests
+import mwclient
 
 
-BASE = 'https://en.touhouwiki.net/wiki/'
+BASE = 'https://en.touhouwiki.net'
 touhouwiki = mwclient.Site('en.touhouwiki.net/', path='')
+
+tablere = re.compile(
+    r'<h2><span class="mw-headline" id=".+?"><a href="/wiki/.+?" title="(.+?)">\1</a></span></h2>\n'
+    r'<table class="wikitable sortable" style="text-align: center;">\n?(.+?)</table>',
+    re.DOTALL | re.MULTILINE
+)
+
+rowre = re.compile(r'<tr>\n?(<td>.+?)</tr>', re.DOTALL | re.MULTILINE)
+colre = re.compile(r'<td>(.*?)\n?</td>', re.DOTALL | re.MULTILINE)
+appearancere = re.compile(r'<a.*? href="(.+?)".*?>(.+?)</a>')
+spellcardre = re.compile(
+    r'<h3><span class="mw-headline" id="(.+?)">.+?</span></h3>\n'
+    r'<table .+?>\n(.+?)</table>',
+    re.DOTALL | re.MULTILINE
+)
+spellfieldsre = re.compile(r'<tr.*?>\n?(.+?)</tr>', re.DOTALL | re.MULTILINE)
+spellimagere = re.compile(r'<img .*?src="(.+?)".*?>', re.DOTALL | re.MULTILINE)
+spellnamere = re.compile(r'<span lang="ja">.+?</span><br />(.+?)<.+?>')
+spelldiffre = re.compile(r'<th.*?>Owner:</th>\n\W*<td.*?>.+?<br />(.*?)&#8212;(.*?)<.+?>', re.DOTALL | re.MULTILINE)
+diffre = re.compile(r'(Easy|Normal|Hard|Lunatic|Extra|Last Word|Phantasm|Overdrive|Level (\d{1,2}|E[Xx]|Spoiler)|(\d\W{2}|Last) Day)')
+spellcommre = re.compile(
+    r'<th.*?>(?:Comment|Translation):</th>\n\s*<td.*?>(.*?)</td>',
+    re.DOTALL | re.MULTILINE
+)
+gomcardre = re.compile(r'<table.*?style="border-collapse: collapse;".*?>\n(.+?)</table>', re.DOTALL | re.MULTILINE)
+gomcommre = re.compile(r'<(t[hd]).*?>(.+?)</\1>', re.DOTALL | re.MULTILINE)
 
 GAME_ABBREVS = {
     'EoSD': 'Embodiment of Scarlet Devil',
@@ -41,60 +67,46 @@ STAGE_ABBREVS = {
     'SP': 'Spoiler Stage'
 }
 
-STAGE_NAMES = []
+EXCEPTIONS = {
+    'Superman "Soaring En no Ozuno"': 'Superman "Soaring En no Ozunu"',
+    'Barrier "Curse of Dreams and Reality"': 'Bounded Field "Curse of Dreams and Reality"',
+    'Barrier "Balance of Motion and Stillness"': 'Bounded Field "Balance of Motion and Stillness"',
+    'Barrier "Mesh of Light and Darkness"': 'Bounded Field "Mesh of Light and Darkness"',
+    'Yukari\'s Arcanum "Danmaku Barrier"': 'Yukari\'s Arcanum "Danmaku Bounded Field"',
+    'Fantasy "Perpetual Motion Machine of the First Kind"': 'Phantasm "Perpetual Motion Machine of the First Kind"',
+    'Border Sign "Boundary of Wave and Particle"': 'Boundary Sign "Boundary between Wave and Particle"',
+    'Oni Sign "Complete Massacre on Mt. Ooe"': 'Oni Sign "Complete Massacre on Mt.Ooe"',
+    '/wiki/Antinomy_of_Common_Flowers/Spell_Cards/Reisen_Udongein_Inaba#Spell_Card_Story_Mode_1': '/wiki/Antinomy_of_Common_Flowers/Spell_Cards/Reisen_Udongein_Inaba#Spell_Card_1',
+    '/wiki/Antinomy_of_Common_Flowers/Spell_Cards/Reisen_Udongein_Inaba#Spell_Card_1': '/wiki/Antinomy_of_Common_Flowers/Spell_Cards/Reisen_Udongein_Inaba#Spell_Card_1_2',
+    'Firefly Sign "Meteor on Earth"': 'Firefly Sign "Meteor On Earth"',
+    'Wriggle Sign "Little Bug Storm"': 'Firefly Sign "Little Bug Storm"',
+    'Bumper Crop "Promise of the Wheat God"': 'Shikigami "Promise of the Wheat God"',
+    'Miracle "Daytime Guest Stars"': 'Wonder "Daytime Guest Stars"',
+    '"Suwa War ~ Native Myth vs Central Myth"': '"Suwa War - Native Myth vs Central Myth"',
+    'Cloud Realm "The Thunder Court in the Sea of Abstruse Clouds"': 'Cloud Realm "Thunder Court in the Sea of Abstruse Clouds"',
+    'Spirit Sign "State of Freedom from Worldly Thoughts"': 'Temperament "State of Freedom from Worldly Thoughts"',
+    'Image "All Ancestors Standing Beside Your Bed"': 'Symbol "All Ancestors Standing Beside Your Bed"',
+    'Image "Danmaku Paranoia"': 'Symbol "Danmaku Paranoia"',
+    'Unconscious "Rorschach in Danmaku"': 'Subconscious "Rorschach in Danmaku"',
+    '/wiki/Urban_Legend_in_Limbo/Spell_Cards/Kasen_Ibaraki#Spell_Card_Story_Mode_3': '/wiki/Urban_Legend_in_Limbo/Spell_Cards/Kasen_Ibaraki#Spell_Card_Story_Mode_2',
+    '/wiki/Urban_Legend_in_Limbo/Spell_Cards/Kasen_Ibaraki#Spell_Card_Story_Mode_4': '/wiki/Urban_Legend_in_Limbo/Spell_Cards/Kasen_Ibaraki#Spell_Card_Story_Mode_3',
+    '/wiki/Hidden_Star_in_Four_Seasons/Spell_Cards/Stage_3#Spell_Card_1': '/wiki/Hidden_Star_in_Four_Seasons/Spell_Cards/Stage_3#Spell_Card_21',
+    '/wiki/Impossible_Spell_Card/Spell_Cards/3rd_Day#Spell_Card_4_-_4': '/wiki/Impossible_Spell_Card/Spell_Cards/4th_Day#Spell_Card_4_-_4'
+}
+for i in range(1, 10):
+    EXCEPTIONS[f'/wiki/Double_Spoiler/Spell_Cards/Stage_EX#Spell_Card_11_-_{i}'] = f'/wiki/Double_Spoiler/Spell_Cards/Stage_EX#Spell_Card_EX_-_{i}'
+for i in range(4, 7):
+    EXCEPTIONS[f'/wiki/Hopeless_Masquerade/Spell_Cards/Mamizou_Futatsuiwa#Spell_Card_Story_Mode_.28disguised.29_{i}'] = f'/wiki/Hopeless_Masquerade/Spell_Cards/Mamizou_Futatsuiwa#Spell_Card_Story_Mode_{i}'
+
 
 PAGE_CACHE = {}
-
-
-def stage_name(predicate):
-    def wrapper(f):
-        STAGE_NAMES.append((predicate, f))
-
-    return wrapper
-
-
-@stage_name(lambda link, name: link['s'] in STAGE_ABBREVS)
-def abbrev_stage(link, _):
-    link['s'] = f'Spell Cards/{STAGE_ABBREVS[link["s"]]}'
-
-
-@stage_name(lambda link, name: link['s'] == name or link['g'] in ('IaMP', 'UNL', 'ULiL', 'SWR'))
-def character_stage(link, name):
-    link['s'] = f'Spell Cards/{link["s"]}'
-
-
-@stage_name(lambda link, name: link['g'] in ('DS', 'StB'))
-def level_stage(link, _):
-    link['s'] = f'Spell Cards/Level {link["s"]}'
-
-
-@stage_name(lambda link, name: link['g'] == 'ISC')
-def day_stage(link, _):
-    link['s'] = f'Spell Cards/{link["s"]}'
-
-
-'''
-@stage_name(lambda link, name: link['g'] == 'GoM')
-def grimoire(link, name):
-    link['s'] = f"{name}'s Spell Cards"
-    if touhouwiki.pages[link['s']].text() == '':
-        link['s'] = f"{name}'s Spell Card"
-
-'''
-
-
-@stage_name(lambda _, __: True)
-def otherwise(link, _):
-    link['s'] = f'Spell Cards/Stage {link["s"]}'
 
 
 def get_spellcards(cached=True):
     if cached:
         return json.load(open('bot_data/spellcards.json', 'r'))
 
-    pages = [
-        touhouwiki.pages[f'List of Spell Cards/Touhou Project {num}'] for num in range(1, 4)
-    ]
+    pages = [requests.get(f'{BASE}/wiki/List_of_Spell_Cards/Touhou_Project_{num}').text for num in range(1, 4)]
     sections = []
     entries = []
     for page in pages:
@@ -108,130 +120,147 @@ def get_spellcards(cached=True):
 
 
 def find_sections(page):
-    section = 1
     sections = []
-    while True:
-        try:
-            sections.append(page.text(section=section))
-        except mwclient.errors.APIError:
-            sections.pop()
-            break
-        section += 1
+    tables = tablere.findall(page)
+    for n, table in enumerate(tables):
+        sections.append(table)
 
     return sections
 
 
 def gather_section(section):
-    name = re.search(r'==\[\[(.*)\]\]==', section.split('|-')[0]).group(1)
-    raw_entries = [
-        [
-            section.strip('\n') for section in entry.strip('|').split('\n|')
-        ] for entry in section.split('|-') if entry.strip().startswith('|')
-    ]
-    entries = [entry[1:] for entry in raw_entries if len(entry) > 2]
+    name = section[0]
+    entries = [*map(colre.findall, rowre.findall(section[1]))]
     entries = [sort_entry(name, entry) for entry in entries]
     return entries
 
 
 def sort_entry(name, entry):
-    if entry[-1] == '}': entry.pop()
-    appearances = []
-    for link in entry[3].split('<br>'):
-        link = link.strip('|').strip()
-        if not (link.startswith('{{') and link.endswith('}}')):
-            continue
-
-        link = link[2:-2].split('|')[1:]
-        link = {k: v for k, v in (f.split('=') for f in link)}
-        if link['g'] == 'GoM': continue
-        for rule in STAGE_NAMES:
-            if rule[0](link, name):
-                rule[1](link, name)
-                break
-
-        sc_page = f"{GAME_ABBREVS[link['g']]}/{link['s']}"
-        if sc_page in PAGE_CACHE:
-            page_entries = PAGE_CACHE[sc_page]
-        else:
-            page = touhouwiki.pages[sc_page].text().replace('||', '|')
-            page_entries = re.findall(r'{{Spell Card Info(.*?)\n}}', page, re.DOTALL)
-            page_entries = [
-                [
-                    value.split('=', 1) for value in page_entry.split('\n|')
-                ] for page_entry in page_entries
-            ]
-            page_entries = [
-                {
-                    value[0].strip(): value[1].strip() for value in page_entry if len(value) > 1
-                } for page_entry in page_entries
-            ]
-            for page_entry in page_entries:
-                page_entry['transname'] = re.sub(r'<ref>.*?</ref>', '', page_entry['transname'])
-                page_entry['image'] = page_entry['image'].split('<br />')[0]
-                if 'comment' in page_entry:
-                    spell_links = re.findall(
-                        r'(?:{{SC\|g=(.+?)\|s=(.+?)\|n=(.+?)(?:\|m=.+?)?}})|(?:\[\[(.+?)\|IN\]\])',
-                        page_entry['comment']
-                    )
-                    while spell_links:
-                        spell = spell_links.pop(0)
-                        if spell[-1]: spell_link = f'[IN]({BASE+spell[-1]})'
-                        else:
-                            data = {'g': spell[0], 's': spell[1]}
-                            for rule in STAGE_NAMES:
-                                if rule[0](data, ''):
-                                    rule[1](data, '')
-                                    break
-
-                            spell_link = f'[{spell[0]}]({BASE}{GAME_ABBREVS[spell[0]]}/' \
-                                         f'{data["s"]}#Spell Card {spell[2]})'
-
-                        page_entry['comment'] = re.sub(
-                            r'({{.+?}})|(\[\[.+?\]\])', spell_link.replace(' ', '_'),
-                            page_entry['comment'], count=1
-                        )
-
-                    page_entry['comment'] = page_entry['comment'].replace('<br />', '\n')
-
-                if page_entry['image'].startswith('[[') and page_entry['image'].endswith(']]'):
-                    page_entry['image'] = page_entry['image'][2:-2].split('|')
-
-            PAGE_CACHE[sc_page] = page_entries
-
-        for page_entry in page_entries:
-            try: entry_number = int(page_entry['number'])
-            except ValueError: entry_number = page_entry['number']
-
-            try: link_number = int(link['n'])
-            except ValueError: link_number = link['n']
-
-            if entry_number == link_number or \
-                any(page_entry['name'] == e['name'] for e in appearances):
-                appearances.append({
-                    'name': page_entry['name'],
-                    'game': link['g'],
-                    'image': page_entry['image'][0],
-                    'difficulty': page_entry['difficulty'] if 'difficulty' in page_entry else 'Story',
-                    'comment': page_entry['comment'] if 'comment' in page_entry else ''
-                })
-
-
     def clean(text):
-        text = re.sub(r'<ref>.*?</ref>', r'', text)
-        text = re.sub(r'\[\[.*?\|(.*?)\]\]', r'\1', text)
-        text = re.sub(r'{{.*?\|(.*?)\|.*?}}', r'\1', text)
-        text = text.replace('<br>', ' / ')
+        text = re.sub('<br( /)?>', ' / ', text)
+        text = re.sub(r'<(.+?)>', '', text)
         return text
+    # if 'Suika' not in name: return
+    appearances = []
+    for link, stage in zip(appearancere.findall(entry[3]), entry[4].split('<br />')):
+        sc_page, game = link
+        sc_page = EXCEPTIONS.get(sc_page, sc_page).split('#')[0]
+        if game not in GAME_ABBREVS: continue
+        if sc_page not in PAGE_CACHE:
+            page = requests.get(BASE+sc_page).text
+            if game == 'GoM':
+                page_entries = gomcardre.findall(page)
+                page_spells = {}
+                for page_entry in page_entries:
+                    rows = spellfieldsre.findall(page_entry)
+                    rows = [re.sub(r'<.+?>', '', gomcommre.findall(row)[-1][1].strip()).strip('\n') for row in rows]
+                    spellname = rows[0].strip('\n')
+                    notes = re.split('[:\u3000]', rows[2], 1)
+                    level = re.split('[:\u3000]', rows[3], 1)
+                    others = {
+                        notes[0].replace('• ', ''): notes[-1],
+                        level[0].replace('• ', ''): level[-1]
+                    }
+                    comment = '\n'.join(rows[4:])
+                    page_spells[spellname] = {
+                        'comment': comment,
+                        'game': game,
+                        'name': spellname,
+                        'difficulty': 'GoM',
+                        'others': others
+                    }
+
+            else:
+                page_entries = spellcardre.findall(page)
+                page_spells = {}
+                for sc, page_entry in page_entries:
+                    page_entry = spellfieldsre.findall(page_entry)
+                    image = spellimagere.search(page_entry[0])
+                    spellname = spellnamere.search(page_entry[0])
+                    diff = spelldiffre.search(page_entry[1])
+                    comment = spellcommre.search(page_entry[-1])
+                    if spellname: spellname = spellname.group(1)
+                    else: spellname = ''
+                    if diff is None: diff = 'Use'
+                    else:
+                        diff_result = diff.group(2).strip()
+                        if diff_result.isdigit(): diff_result = diff.group(1)
+                        diff = diff_result.strip()
+                        if not diff: diff = 'Story'
+                        elif '{{{difficulty}}}' in diff: diff = 'Use'
+                        else: diff = diffre.search(diff).group(1)
+                    if image: image = image.group(1)
+                    else: image = None
+                    if comment: comment = comment.group(1)
+                    else: comment = ''
+
+                    comment = re.sub(r'<a.*?href="(.+?)>(.+?)</a>"', r'[\2](\1)', comment)
+                    comment = re.sub(r'<.+?>', '', comment)
+                    page_spells[sc] = {
+                        'comment': comment,
+                        'game': game,
+                        'name': spellname,
+                        'difficulty': diff,
+                        'image': BASE+image if image else ''
+                    }
+
+            PAGE_CACHE[sc_page.strip('\n')] = page_spells
+
+        if game == 'GoM':
+            entry[1] = re.sub(r'&\S+;', '', entry[1]).replace('  ', ' ').strip()
+            entry[1] = re.sub(r'<.+?>', '', entry[1])
+            entry[1] = EXCEPTIONS.get(entry[1], entry[1])
+            for k, v in PAGE_CACHE[sc_page].items():
+                k = re.sub(r'&\S+;', '', k).replace('  ', ' ').strip()
+                if entry[1] in k or k in entry[1] or k == entry[1]:
+                    spells = [v]
+                    break
+
+            else:
+                entry[1] = re.sub(r' -.+?-', '', entry[1])
+                for k, v in PAGE_CACHE[sc_page].items():
+                    k = re.sub(r'&\S+;', '', k).replace('  ', ' ').strip()
+                    if entry[1] in k or k in entry[1] or k == entry[1]:
+                        spells = [v]
+                        break
+                else:
+                    raise Exception('Linked spell not found')
+
+                # __import__('sys').exit(1)
+
+        elif '#' in link[0] and stage != 'Use':
+            page_id = EXCEPTIONS.get(link[0], link[0])
+            page_id = page_id.split('#')[-1]
+            linked_spell = PAGE_CACHE[sc_page].get(page_id)
+            if linked_spell is None:
+                try:
+                    page_id = page_id.split('_')
+                    page_id[-1] = f'{int(page_id[-1]):03d}'
+                    page_id = '_'.join(page_id)
+                    linked_spell = PAGE_CACHE[sc_page].get(page_id)
+                except ValueError:
+                    raise Exception('Could not find linked spell')
+
+            spells = [spell for spell in PAGE_CACHE[sc_page].values() if spell['name'] == linked_spell['name']]
+
+        else:
+            spells = [{
+                'comment': re.sub("</?i>", '*', entry[2]),
+                'name': clean(entry[1]),
+                'game': game,
+                'difficulty': 'Use'
+            }]
+
+        appearances.extend(spells)
 
     sorted_entry = {
         'japanese': clean(entry[0]),
         'english': clean(entry[1]),
-        'comments': entry[2].replace("''", '*'),
+        'comments': re.sub("</?i>", '*', entry[2]),
         'owner': name,
         'appearances': appearances
     }
     return sorted_entry
-
 
 async def get_thumbnail(character):
     thumbnail = touhouwiki.pages[character].text(section=0)
@@ -250,10 +279,11 @@ async def get_image_url(image):
     page = await page.text()
     page = re.search(r'<img (.*?) />', page).group(1).split(' ')
     for value in page:
-        if value.startswith('src'):
+        if value.startswith('src='):
             page = value.split('=')[1][1:-1]
-            return f'https://en.touhouwiki.net{page}'
+
+    return f'https://en.touhouwiki.net{page}'
 
 
 if __name__ == '__main__':
-    spellcards = get_spellcards(cached=True)
+    spellcards = get_spellcards(cached=False)

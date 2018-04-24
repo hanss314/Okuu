@@ -48,6 +48,7 @@ class CodeNamesBot(commands.Bot):
                 return
 
             elif isinstance(exception.original, discord.HTTPException):
+                print(exception)
                 try:
                     await ctx.send('Unyu? I can\'t send that.')
                 except discord.Forbidden:
