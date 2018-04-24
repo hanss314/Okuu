@@ -3,8 +3,9 @@ import discord
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
 mpl.use('agg')
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 
+from PIL import Image
 from os import path
 from ruamel import yaml
 from .util import sudoku, comp_parser, touhouwiki
@@ -166,12 +167,15 @@ class Utils:
         """Render a LaTeX equation"""
         plt.clf()
         fig, ax = plt.subplots()
+        ax.set_axis_off()
         fig.patch.set_visible(False)
-        ax.axis('off')
-        plt.text(0.0, 0.0, text, fontsize=14)
-        with open('latex.png', 'wb') as texfile:
-            fig.canvas.print_png(texfile)
-
+        fig.text(0.0, 0.0, text, fontsize=14)
+        fig.savefig('latex.png', transparency=True)
+        image = Image.open('latex.png')
+        thresholded = [(0, ) * 4 if item[3] == 0 else item for item in image.getdata()]
+        image.putdata(thresholded)
+        image = image.crop(image.getbbox())
+        image.save('latex.png')
         await ctx.send(file=discord.File('latex.png'))
 
     @commands.command(aliases=['mass', 'molarmass'])
