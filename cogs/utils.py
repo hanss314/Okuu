@@ -1,15 +1,17 @@
 import asyncio
 import discord
+import matplotlib as mpl
+mpl.rcParams['text.usetex'] = True
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-from matplotlib import rcParams
 from os import path
 from ruamel import yaml
 from .util import sudoku, comp_parser, touhouwiki
 from .util.rpn import rpncalc, convert, to_str
 from discord.ext import commands
 
-rcParams['text.usetex'] = True
+
 
 
 class Utils:
