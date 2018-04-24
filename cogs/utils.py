@@ -2,7 +2,7 @@ import asyncio
 import discord
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.use('Agg')
+mpl.use('agg')
 import matplotlib.pyplot as plt
 
 from os import path
