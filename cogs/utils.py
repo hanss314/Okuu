@@ -1,11 +1,15 @@
 import asyncio
 import discord
+import matplotlib.pyplot as plt
 
+from matplotlib import rcParams
 from os import path
 from ruamel import yaml
 from .util import sudoku, comp_parser, touhouwiki
 from .util.rpn import rpncalc, convert, to_str
 from discord.ext import commands
+
+rcParams['text.usetex'] = True
 
 
 class Utils:
@@ -154,6 +158,19 @@ class Utils:
             await ctx.send(f'```{str(solved)}```')
         else:
             await ctx.send('Unsolvable sudoku.')
+
+    @commands.command(aliaes=['tex'])
+    async def latex(self, ctx, *, text):
+        """Render a LaTeX equation"""
+        plt.clf()
+        fig, ax = plt.subplots()
+        fig.patch.set_visible(False)
+        ax.axis('off')
+        plt.text(0.0, 0.0, text, fontsize=14)
+        with open('latex.png', 'wb') as texfile:
+            fig.canvas.print_png(texfile)
+
+        await ctx.send(file=discord.File('latex.png'))
 
     @commands.command(aliases=['mass', 'molarmass'])
     async def molar_mass(self, ctx, *, compound):
