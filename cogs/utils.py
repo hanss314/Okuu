@@ -169,7 +169,7 @@ class Utils:
         fig, ax = plt.subplots()
         ax.set_axis_off()
         fig.patch.set_visible(False)
-        fig.text(0, 0, r'\[ ' + text.strip('`') + r' \]', fontsize=14)
+        fig.text(0, 0.5, r'\[ ' + text.strip('`') + r' \]', fontsize=14)
         try:
             fig.savefig('latex.png')
         except RuntimeError as e:
