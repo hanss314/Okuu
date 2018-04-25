@@ -167,12 +167,19 @@ class Utils:
         """Render a LaTeX equation"""
         plt.clf()
         fig, ax = plt.subplots()
+        plt.rc('text', usetex=True)
+        plt.rc('text.latex', preamble=
+            r'\usepackage{amsmath}' + '\n'
+            r'\usepackage{esint}' + '\n'
+            r'\usepackage{pxfonts}' + '\n'
+        )
         ax.set_axis_off()
         fig.patch.set_visible(False)
         fig.text(0, 0.5, r'\[ ' + text.strip('`') + r' \]', fontsize=14)
         try:
             fig.savefig('latex.png')
         except RuntimeError as e:
+            print(e)
             return await ctx.send(f'Unyu? That doesn\'t look right.')
         image = Image.open('latex.png')
         thresholded = [(0, ) * 4 if item[3] == 0 else item for item in image.getdata()]
