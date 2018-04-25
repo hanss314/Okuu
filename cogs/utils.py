@@ -162,7 +162,7 @@ class Utils:
         else:
             await ctx.send('Unsolvable sudoku.')
 
-    @commands.command(aliaes=['tex'])
+    @commands.command(aliases=['tex'])
     async def latex(self, ctx, *, text):
         """Render a LaTeX equation"""
         plt.clf()
