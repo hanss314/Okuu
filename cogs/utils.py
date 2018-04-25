@@ -13,8 +13,6 @@ from .util.rpn import rpncalc, convert, to_str
 from discord.ext import commands
 
 
-
-
 class Utils:
 
     def __init__(self, bot):
