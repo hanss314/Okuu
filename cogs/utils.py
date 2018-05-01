@@ -183,7 +183,7 @@ class Utils:
         thresholded = [(0, ) * 4 if item[3] == 0 else item for item in image.getdata()]
         image.putdata(thresholded)
         image = image.crop(image.getbbox())
-        image.putdata([(255,)*4 if item[3] == 0 else item for item in image.getdata()])
+        #image.putdata([(255,)*4 if item[3] == 0 else item for item in image.getdata()])
         image.save('latex.png')
         await ctx.send(file=discord.File('latex.png'))
 
