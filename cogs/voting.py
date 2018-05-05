@@ -27,10 +27,10 @@ class Voting:
             self.votes = yaml.load(votes)
 
         self.can_vote = False
-
+    '''
     async def __local_check(self, ctx):
         return self.bot.get_guild(386357756409675776).get_member(ctx.author.id) is not None
-
+    '''
     def get_count(self, filename):
         acc = 0
         for vote in self.votes['votes'].values():
@@ -186,7 +186,6 @@ class Voting:
             os.path.join(RESP_DIR, path): [[], 0]
             for path in os.listdir(RESP_DIR) if os.path.isfile(os.path.join(RESP_DIR, path))
         }
-
         for votes in self.votes['votes'].values():
             if len(votes) == 0: continue
             choices = {r: [] for r in responses}
@@ -198,10 +197,10 @@ class Voting:
                 if len(v) == 0: continue
                 responses[r][0].append(mean(v))
                 responses[r][1] += len(v)
-
+        print(responses)
         responses = [{
-                'responder': r[0],
-                'response': responses[r],
+                'responder': r.split('/')[-1].split('.')[0],
+                'response': r,
                 'percentage': mean(p[0]) * 100,
                 'stdev': stdev(p[0]),
                 'votes': p[1]
