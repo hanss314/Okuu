@@ -2,11 +2,9 @@ import re
 import json
 import aiohttp
 import requests
-import mwclient
 
 
 BASE = 'https://en.touhouwiki.net'
-touhouwiki = mwclient.Site('en.touhouwiki.net/', path='')
 
 tablere = re.compile(
     r'<h2><span class="mw-headline" id=".+?"><a href="/wiki/.+?" title="(.+?)">\1</a></span></h2>\n'
@@ -33,6 +31,7 @@ spellcommre = re.compile(
 )
 gomcardre = re.compile(r'<table.*?style="border-collapse: collapse;".*?>\n(.+?)</table>', re.DOTALL | re.MULTILINE)
 gomcommre = re.compile(r'<(t[hd]).*?>(.+?)</\1>', re.DOTALL | re.MULTILINE)
+
 
 GAME_ABBREVS = {
     'EoSD': 'Embodiment of Scarlet Devil',
@@ -263,27 +262,28 @@ def sort_entry(name, entry):
     return sorted_entry
 
 async def get_thumbnail(character):
-    thumbnail = touhouwiki.pages[character].text(section=0)
-    thumbnail = re.search(r'{{Infobox Character\n(.*)\n}}', thumbnail, re.DOTALL).group(1).split('\n|')
-    for section in thumbnail:
-        if section.strip().startswith('image'):
-            thumbnail = section.split('=')[1].strip()[2:-2].split('|')[0]
-            break
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f'{BASE}/wiki/{character.replace(" ", "_")}') as resp:
+            text = await resp.text()
 
-    return await get_image_url(thumbnail)
+    print(character)
+    image = re.findall(f'<img alt="{character}" src="(.+?)".*?>', text, re.MULTILINE | re.DOTALL)
+    return BASE+image[0]
 
+'''
 async def get_image_url(image):
     async with aiohttp.ClientSession() as session:
         page = await session.get(f'https://en.touhouwiki.net/wiki/{image}')
 
     page = await page.text()
+    print(page)
     page = re.search(r'<img (.*?) />', page).group(1).split(' ')
     for value in page:
         if value.startswith('src='):
             page = value.split('=')[1][1:-1]
 
     return f'https://en.touhouwiki.net{page}'
-
+'''
 
 if __name__ == '__main__':
     spellcards = get_spellcards(cached=False)

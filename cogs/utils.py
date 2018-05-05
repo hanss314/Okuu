@@ -312,6 +312,7 @@ class Utils:
             )
             thumb = await touhouwiki.get_thumbnail(entry['owner'])
             embed.set_thumbnail(url=thumb)
+            # print(search)
             if len(search) == 1:
                 appearance = search[0]
                 if 'others' in appearance:
@@ -341,6 +342,7 @@ class Utils:
                         inline=False
                     )
 
+            print(embed)
             await ctx.send(embed=embed)
 
     @commands.command()
