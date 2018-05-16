@@ -2,9 +2,12 @@ import discord
 import datetime
 import time
 import urllib
+import os
+import random
 
 from discord.ext import commands
 
+IMAGE_PREFIX = "bot_data/images/"
 
 class Misc:
     def __init__(self, bot):
@@ -123,11 +126,33 @@ class Misc:
     async def dab(self, ctx):
         """Dab at the haters"""
         await ctx.send('<:nueDab:404506021114150922>')
-    
+
+    @commands.command(aliases=['i', 'img'])
+    async def image(self, ctx, image):
+        """Get an image"""
+        directory = IMAGE_PREFIX + image
+        if os.path.isdir(directory) or os.path.islink(directory):
+            f = os.listdir(directory)
+            if not f: return await ctx.send('Unyu? I can\'t find that image.')
+            f = random.choice()
+            f = os.path.join(directory, f)
+            await ctx.send(file=discord.File(f))
+        else:
+            images = [i for i in os.listdir(IMAGE_PREFIX) if i.endswith('.png') or i.endswith('.jpg')]
+            images = [i for i in images if image in i.split('.')[0]]
+            if not images: return await ctx.send('Unyu? I can\'t find that image.')
+            for i in images:
+                if image == i.split('.')[0]:
+                    f = os.path.join(IMAGE_PREFIX, i)
+                    return await ctx.send(file=discord.File(f))
+
+            f = os.path.join(IMAGE_PREFIX, random.choice(images))
+            await ctx.send(file=discord.File(f))
+
     @commands.command()
     async def asakura(self, ctx):
         """A Sakura"""
-        await ctx.send(file=discord.File('bot_data/sakura.png'))
+        await ctx.send(file=discord.File('bot_data/images/sakura.png'))
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
@@ -142,7 +167,7 @@ class Misc:
         except discord.HTTPException:
             await ctx.send('Banning failed, did you type the id correctly?')
 
-    @commands.command(aliases=['tatsukete_eirin', 'eirin'])
+    @commands.command(aliases=['tatsukete_eirin', 'eirin', 'tatsukete'])
     async def help(self, ctx, *args):
         """This help message"""
         if len(args) == 0:
