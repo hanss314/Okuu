@@ -123,6 +123,11 @@ class Misc:
     async def dab(self, ctx):
         """Dab at the haters"""
         await ctx.send('<:nueDab:404506021114150922>')
+    
+    @commands.command()
+    async def asakura(self, ctx):
+        """A Sakura"""
+        await ctx.send(file=discord.File('bot_data/sakura.png'))
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
