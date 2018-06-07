@@ -194,7 +194,7 @@ class Utils:
         if units == None: return await ctx.send('Unyu? I don\'t know those units.')
         vol = value[0] * units[1]
         vol = format(vol, '.4f').rstrip('0').rstrip('.')
-        await ctx.send(f'{value[0]} {units[0]} are equivalent to {vol} ccs')
+        await ctx.send(f'{value[0]} {units[0]} is equivalent to {vol} ccs')
 
 
     @commands.command(aliases=['mass', 'molarmass'])
