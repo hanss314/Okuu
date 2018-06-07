@@ -11,6 +11,7 @@ from ruamel import yaml
 from .util import sudoku, comp_parser, touhouwiki
 from .util.rpn import rpncalc, convert, to_str
 from discord.ext import commands
+from .util.volumes import volume, volume_units
 
 
 class Utils:
@@ -185,6 +186,16 @@ class Utils:
         #image.putdata([(255,)*4 if item[3] == 0 else item for item in image.getdata()])
         image.save('latex.png')
         await ctx.send(file=discord.File('latex.png'))
+
+    @commands.command()
+    async def cc(self, ctx, *, value: volume):
+        """Converts a volume to ccs"""
+        units = volume_units.get(value[1])
+        if units == None: return await ctx.send('Unyu? I don\'t know those units.')
+        vol = value[0] * units[1]
+        vol = format(vol, '.4f').rstrip('0').rstrip('.')
+        await ctx.send(f'{value[0]} {units[0]} are equivalent to {vol} ccs')
+
 
     @commands.command(aliases=['mass', 'molarmass'])
     async def molar_mass(self, ctx, *, compound):
